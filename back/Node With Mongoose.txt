@@ -1,0 +1,227 @@
+->  npx express-generator
+->  npm install
+
+
+
+to use request body
+->  npm install body-parser
+->  add to app.js
+-----------------------------------------------------
+var bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+-----------------------------------------------------
+
+
+
+
+to use nodemon
+->  npm install nodemon
+->  modify package.json 
+-----------------------------------------------------
+  "scripts": {
+    "start": "DEBUG=<name of folder>:* nodemon node ./bin/www"
+  },
+-----------------------------------------------------
+
+
+
+
+
+to test your app
+->  add to app.js
+----------------------------------------------------
+app.get('/', (req, res) => {
+  res.send('Hello Maria !!')
+});
+----------------------------------------------------
+
+
+
+
+
+to use mongoose
+->  npm install mongoose
+->  add to app.js
+-----------------------------------------------------
+var mongoose = require('mongoose');
+-----------------------------------------------------
+
+
+
+
+to make the connection with mongo
+->  add to app.js
+-----------------------------------------------------
+var mongoose = require('mongoose');
+try {
+  mongoose.connect(process.env.CONNECTION_STRING, {
+    dbName: process.env.DB_NAME,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true
+  });
+} catch(e) {
+  console.log(e)
+}
+-----------------------------------------------------
+
+
+
+
+to make a secure connection and save the username and password of your database
+use env
+->  npm install dotenv
+->  add to app.js
+-----------------------------------------------------
+require('dotenv').config();
+-----------------------------------------------------
+->  create a file .env
+->  add to .env
+-----------------------------------------------------
+CONNECTION_STRING= (e.g. mongodb+srv://username:password@cluster0-jtpxd.mongodb.net/admin)
+DB_NAME= (e.g. name-of-database)
+-----------------------------------------------------
+
+
+
+
+************************************************************************************
+if it gives you a error  "MongoParseError: option usecreateindex is not supported"
+please install version of mongoose less then v 6.
+->  npm uninstall mongoose
+->  (e.g.) npm install mongoose@5.13.8
+************************************************************************************
+
+
+
+
+
+<<<<<<< Model >>>>>>>>
+->  create folder models
+->  create file models/User.js
+->  add to models/User.js
+-----------------------------------------------------------------------
+const { Schema, model } = require('mongoose');
+const userSchema = new Schema({
+    username: {
+        type: String,
+        unique: true,
+        trim: true,
+        maxLength: 50,
+        required: true
+    },
+    password: String,
+    profile: {
+        firstName: String,
+        lastName: String,
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
+    }
+}, {
+    collection: 'users'
+});
+const User = model('User', userSchema);
+module.exports = User;
+-----------------------------------------------------------------------
+
+
+<<<<<<< Model >>>>>>>>
+->  create folder controllers
+->  create file controllers/usersController.js
+->  add to controllers/usersController.js
+-----------------------------------------------------------------------
+const User = require('../models/User');
+class UsersController {
+
+    getAll(req, res, next) {
+        User.find({}, (err, response) => {
+            if (err) return next(err);
+            res.status(200).send(response);
+        })
+    }
+
+    get(req, res, next) {
+        let { id } = req.params;
+        User.findById(id, (err, response) => {
+            if (err) return next(err);
+            res.status(200).send(response);
+        });
+    }
+
+    post(req, res, next) {
+        let body = req.body;
+        let user = new User(body);
+        user.save((err, response) => {
+            if (err) return next(err);
+            res.status(200).send(response);
+        });
+    }
+
+    put(req, res, next) {
+        let { id } = req.params;
+        let body = req.body;
+        User.updateOne({ _id: id }, {
+            $set: body
+        }, (err, response) => {
+            if (err) return next(err);
+            res.status(200).send(response);
+        });
+    }
+
+    delete(req, res, next) {
+        let { id } = req.params;
+        User.deleteOne({ _id: id }, (err, response) => {
+            if (err) return next(err);
+            res.status(200).send(response);
+        })
+    }
+
+}
+const usersController = new UsersController();
+module.exports = usersController;
+-----------------------------------------------------------------------
+
+
+<<<<< routes >>>>>
+->  update file routes/users.js
+-----------------------------------------------------------------------
+var express = require('express');
+var router = express.Router();
+var usersController = require('../controllers/usersController');
+
+router.get('/', usersController.getAll);
+router.get('/:id', usersController.get);
+router.post('/', usersController.post);
+router.put('/:id', usersController.put);
+router.delete('/:id', usersController.delete);
+
+module.exports = router;
+-----------------------------------------------------------------------
+
+
+-->> then we call this in app.js
+--------------------------------------------
+var usersRouter = require('./routes/users');
+app.use('/users', usersRouter);
+---------------------------------------------
+
+
+
+to the foreign key 
+-> in model
+    <name>: {
+    type: Schema.Types.ObjectId,
+    ref: '<Model-of-name>'
+      }
+
+-> in controller get join
+    <Model>.find({}).populate('<name>').exec(() => {});
+
+********************************************************
+********************************************************
+***********  And now show us your creativity ***********
+********************************************************
+********************************************************
