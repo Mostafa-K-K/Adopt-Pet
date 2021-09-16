@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 
 import {
     View,
@@ -10,30 +10,43 @@ import {
     ScrollView,
     StatusBar
 } from 'react-native';
+import { RadioButton } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import * as Animatable from 'react-native-animatable';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 
+import { AuthContext } from '../../components/context';
+import API from '../../API';
+import moment from 'moment';
+
 export default function SignInScreen({ navigation }) {
+
+    const { signUp } = useContext(AuthContext);
 
     const [state, updateState] = useState({
         firstName: '',
         lastName: '',
         phone: '',
         address: '',
-        birthDate: '',
-        gender: '',
+        birthDate: new Date(),
+        gender: 'Male',
         username: '',
         password: '',
-        confirm_password: '',
+        conPassword: '',
 
-        isValidUser: true,
+        show: false,
 
-        isValidPassword: true,
+        isValidFirstName: false,
+        isValidLastName: false,
+        isValidPhone: false,
+        isValidAddress: false,
+        isValidUser: false,
+        isValidPassword: false,
+        isValidConfPassword: false,
+
         secureTextEntry: true,
-
-        isValidConfPassword: true,
         confirm_secureTextEntry: true,
     });
 
@@ -44,155 +57,304 @@ export default function SignInScreen({ navigation }) {
         }))
     }
 
-    function textInputChange(val) {
+    function handleUsernameChange(val) {
+        val = val.replace(/\s/g, '');
         setState({ username: val });
-
-        (val.trim().length >= 6) ?
-            setState({ isValidUser: true }) :
-            setState({ isValidUser: false });
+        (val == '') ?
+            setState({ isValidUser: false })
+            :
+            (val.trim().length >= 6) ?
+                setState({ isValidUser: false }) :
+                setState({ isValidUser: true });
     }
 
     function handlePasswordChange(val) {
-        setState({ password: val });
-
-        (val.trim().length >= 8) ?
-            setState({ isValidPassword: true }) :
-            setState({ isValidPassword: false });
+        val = val.replace(/\s/g, '');
+        setState({ password: val.trim() });
+        (val == '') ?
+            setState({ isValidPassword: false })
+            :
+            (val.trim().length >= 8) ?
+                setState({ isValidPassword: false }) :
+                setState({ isValidPassword: true });
     }
 
     function handleConfirmPasswordChange(val) {
-        setState({ confirm_password: val });
+        val = val.replace(/\s/g, '');
+        setState({ conPassword: val });
+        (val == '') ?
+            setState({ isValidConfPassword: false })
+            :
+            (val == state.password) ?
+                setState({ isValidConfPassword: false }) :
+                setState({ isValidConfPassword: true });
+    }
 
-        (val == state.password) ?
-            setState({ isValidConfPassword: true }) :
-            setState({ isValidConfPassword: false });
+    function handleDate(e, nextDate) {
+        const prevDate = state.birthDate
+        const date = nextDate || prevDate;
+        setState({ birthDate: date, show: false })
+    };
+
+    function handleSignUp() {
+        let reqBody = {
+            firstName: state.firstName.trim(),
+            lastName: state.lastName.trim(),
+            gender: state.gender,
+            phone: state.phone.trim(),
+            address: state.address.trim(),
+            birthDate: state.birthDate,
+            username: state.username,
+            password: state.password
+        }
+
+        if (reqBody.firstName != ''
+            && reqBody.lastName != ''
+            && reqBody.phone != ''
+            && reqBody.address != ''
+            && !state.isValidUser
+            && !state.isValidPassword
+            && !state.isValidConfPassword
+        ) {
+            API.post(`signUp`, reqBody)
+                .then(res => {
+                    const success = res.data.success;
+                    if (success) {
+                        const data = res.data.result;
+                        signUp(data);
+                    }
+                });
+        }
+        else {
+            if (reqBody.firstName == '') setState({ isValidFirstName: true });
+            if (reqBody.lastName == '') setState({ isValidLastName: true });
+            if (reqBody.phone == '') setState({ isValidPhone: true });
+            if (reqBody.address == '') setState({ isValidAddress: true });
+            if (reqBody.username == '') setState({ isValidUser: true });
+            if (reqBody.password == '') setState({ isValidPassword: true });
+            if (state.conPassword == '') setState({ isValidConfPassword: true });
+        }
     }
 
     return (
         <View style={styles.container}>
-            <StatusBar backgroundColor='#D2B48C' barStyle="light-content" />
+            <StatusBar backgroundColor='#D2B48C' barStyle='light-content' />
             <View style={styles.header}>
                 <Text style={styles.text_header}>Register Now!</Text>
             </View>
             <Animatable.View
-                animation="fadeInUpBig"
+                animation='fadeInUpBig'
                 style={styles.footer}
             >
                 <ScrollView>
                     <Text style={styles.text_footer}>First Name</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name="user"
+                            name='user'
                             color='#D2B48C'
                             size={20}
                         />
                         <TextInput
-                            placeholder="First Name"
+                            placeholder='First Name'
                             style={styles.textInput}
-                            autoCapitalize="none"
-                            onChangeText={(val) => setState({ firstName: val })}
+                            autoCapitalize='none'
+                            onChangeText={(val) => setState({ firstName: val, isValidFirstName: false })}
                         />
                     </View>
+                    {state.isValidFirstName ?
+                        <Animatable.View animation='fadeInLeft' duration={500}>
+                            <Text style={styles.errorMsg}>Please fill this field</Text>
+                        </Animatable.View>
+                        : null
+                    }
 
                     <Text style={[styles.text_footer, {
-                        marginTop: 35
+                        marginTop: 15
                     }]}>Last Name</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name="user"
+                            name='user'
                             color='#D2B48C'
                             size={20}
                         />
                         <TextInput
-                            placeholder="Last Name"
+                            placeholder='Last Name'
                             style={styles.textInput}
-                            autoCapitalize="none"
-                            onChangeText={(val) => setState({ lastName: val })}
+                            autoCapitalize='none'
+                            onChangeText={(val) => setState({ lastName: val, isValidLastName: false })}
                         />
+                    </View>
+                    {state.isValidLastName ?
+                        <Animatable.View animation='fadeInLeft' duration={500}>
+                            <Text style={styles.errorMsg}>Please fill this field</Text>
+                        </Animatable.View>
+                        : null
+                    }
+
+                    <Text style={[styles.text_footer, {
+                        marginTop: 15
+                    }]}>Gender</Text>
+                    <View style={styles.action}>
+                        <FontAwesome
+                            name='male'
+                            color='#D2B48C'
+                            size={24}
+                        />
+                        <FontAwesome
+                            name='female'
+                            color='#D2B48C'
+                            size={24}
+                        />
+                        <RadioButton.Group
+                            value={state.gender}
+                            onValueChange={val => setState({ gender: val })}
+                        >
+                            <View style={{ flexDirection: 'row', marginTop: -15 }}>
+                                <RadioButton.Item
+                                    label='Male'
+                                    value='Male'
+                                    position='leading'
+                                    color='#D2B48C'
+                                    uncheckedColor='#D2B48C'
+                                />
+                                <RadioButton.Item
+                                    label='Female'
+                                    value='Female'
+                                    position='leading'
+                                    color='#D2B48C'
+                                    uncheckedColor='#D2B48C'
+                                />
+                            </View>
+                        </RadioButton.Group>
                     </View>
 
                     <Text style={[styles.text_footer, {
-                        marginTop: 35
+                        marginTop: 15
                     }]}>Phone Number</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name="phone"
+                            name='phone'
                             color='#D2B48C'
                             size={20}
                         />
                         <TextInput
-                            placeholder="Phone Number"
+                            placeholder='Phone Number'
                             style={styles.textInput}
-                            autoCapitalize="none"
-                            onChangeText={(val) => setState({ phone: val })}
-                            keyboardType="numeric"
+                            autoCapitalize='none'
+                            onChangeText={(val) => setState({ phone: val, isValidPhone: false })}
+                            keyboardType='numeric'
                         />
                     </View>
+                    {state.isValidPhone ?
+                        <Animatable.View animation='fadeInLeft' duration={500}>
+                            <Text style={styles.errorMsg}>Please fill this field</Text>
+                        </Animatable.View>
+                        : null
+                    }
 
                     <Text style={[styles.text_footer, {
-                        marginTop: 35
+                        marginTop: 15
                     }]}>Address</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name="map"
+                            name='map'
                             color='#D2B48C'
                             size={20}
                         />
                         <TextInput
-                            placeholder="Address"
+                            placeholder='Address'
                             style={styles.textInput}
-                            autoCapitalize="none"
-                            onChangeText={(val) => setState({ address: val })}
+                            autoCapitalize='none'
+                            onChangeText={(val) => setState({ address: val, isValidAddress: false })}
                         />
+                    </View>
+                    {state.isValidAddress ?
+                        <Animatable.View animation='fadeInLeft' duration={500}>
+                            <Text style={styles.errorMsg}>Please fill this field</Text>
+                        </Animatable.View>
+                        : null
+                    }
+
+                    <Text style={[styles.text_footer, {
+                        marginTop: 15
+                    }]}>Birth Date</Text>
+                    <View>
+                        <TouchableOpacity
+                            style={styles.action}
+                            onPress={() => setState({ show: true })}
+                        >
+                            <FontAwesome
+                                name='calendar'
+                                color='#D2B48C'
+                                size={20}
+                            />
+                            <TextInput
+                                editable={false}
+                                style={styles.textInput}
+                            >
+                                {moment(state.birthDate).format('D   MMMM   YYYY')}
+                            </TextInput>
+                        </TouchableOpacity>
+                        {state.show && (
+                            <DateTimePicker
+                                value={state.birthDate}
+                                maximumDate={new Date()}
+                                mode="date"
+                                onChange={handleDate}
+                            />
+                        )}
                     </View>
 
                     <Text style={[styles.text_footer, {
-                        marginTop: 35
+                        marginTop: 15
                     }]}>Username</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name="user-o"
+                            name='user-o'
                             color='#D2B48C'
                             size={20}
                         />
                         <TextInput
-                            placeholder="Your Username"
+                            placeholder='Your Username'
                             style={styles.textInput}
-                            autoCapitalize="none"
-                            onChangeText={(val) => textInputChange(val)}
+                            autoCapitalize='none'
+                            value={state.username}
+                            onChangeText={(val) => handleUsernameChange(val)}
                         />
-                        {state.isValidUser ?
+                        {state.isValidUser && state.username !== '' ?
                             <Animatable.View
-                                animation="bounceIn"
+                                animation='bounceIn'
                             >
                                 <Feather
-                                    name="check-circle"
+                                    name='check-circle'
                                     color='#D2B48C'
                                     size={20}
                                 />
                             </Animatable.View>
                             : null}
                     </View>
-                    {state.isValidUser ? null :
-                        <Animatable.View animation="fadeInLeft" duration={500}>
+                    {state.isValidUser ?
+                        <Animatable.View animation='fadeInLeft' duration={500}>
                             <Text style={styles.errorMsg}>Username must be 6 characters long.</Text>
                         </Animatable.View>
+                        : null
                     }
 
                     <Text style={[styles.text_footer, {
-                        marginTop: 35
+                        marginTop: 15
                     }]}>Password</Text>
                     <View style={styles.action}>
                         <Feather
-                            name="lock"
+                            name='lock'
                             color='#D2B48C'
                             size={20}
                         />
                         <TextInput
-                            placeholder="Your Password"
+                            placeholder='Your Password'
                             secureTextEntry={state.secureTextEntry ? true : false}
                             style={styles.textInput}
-                            autoCapitalize="none"
+                            autoCapitalize='none'
+                            value={state.password}
                             onChangeText={(val) => handlePasswordChange(val)}
                         />
                         <TouchableOpacity
@@ -200,39 +362,41 @@ export default function SignInScreen({ navigation }) {
                         >
                             {state.secureTextEntry ?
                                 <Feather
-                                    name="eye-off"
+                                    name='eye-off'
                                     color='#D2B48C'
                                     size={20}
                                 />
                                 :
                                 <Feather
-                                    name="eye"
+                                    name='eye'
                                     color='#D2B48C'
                                     size={20}
                                 />
                             }
                         </TouchableOpacity>
                     </View>
-                    {state.isValidPassword ? null :
-                        <Animatable.View animation="fadeInLeft" duration={500}>
+                    {state.isValidPassword ?
+                        <Animatable.View animation='fadeInLeft' duration={500}>
                             <Text style={styles.errorMsg}>Password must be 8 characters long.</Text>
                         </Animatable.View>
+                        : null
                     }
 
                     <Text style={[styles.text_footer, {
-                        marginTop: 35
+                        marginTop: 15
                     }]}>Confirm Password</Text>
                     <View style={styles.action}>
                         <Feather
-                            name="lock"
+                            name='lock'
                             color='#D2B48C'
                             size={20}
                         />
                         <TextInput
-                            placeholder="Confirm Your Password"
+                            placeholder='Confirm Your Password'
                             secureTextEntry={state.confirm_secureTextEntry ? true : false}
                             style={styles.textInput}
-                            autoCapitalize="none"
+                            autoCapitalize='none'
+                            value={state.conPassword}
                             onChangeText={(val) => handleConfirmPasswordChange(val)}
                         />
                         <TouchableOpacity
@@ -240,29 +404,30 @@ export default function SignInScreen({ navigation }) {
                         >
                             {state.confirm_secureTextEntry ?
                                 <Feather
-                                    name="eye-off"
+                                    name='eye-off'
                                     color='#D2B48C'
                                     size={20}
                                 />
                                 :
                                 <Feather
-                                    name="eye"
+                                    name='eye'
                                     color='#D2B48C'
                                     size={20}
                                 />
                             }
                         </TouchableOpacity>
                     </View>
-                    {state.isValidConfPassword ? null :
-                        <Animatable.View animation="fadeInLeft" duration={500}>
+                    {state.isValidConfPassword || (state.isValidPassword && state.password == '') ?
+                        <Animatable.View animation='fadeInLeft' duration={500}>
                             <Text style={styles.errorMsg}>Confrim password incorrect.</Text>
                         </Animatable.View>
+                        : null
                     }
 
                     <View style={styles.button}>
                         <TouchableOpacity
                             style={styles.signIn}
-                            onPress={() => { }}
+                            onPress={handleSignUp}
                         >
                             <Text style={[styles.textSign, {
                                 color: '#fff'
@@ -285,7 +450,7 @@ export default function SignInScreen({ navigation }) {
                     </View>
                 </ScrollView>
             </Animatable.View>
-        </View>
+        </View >
     )
 }
 
@@ -314,7 +479,7 @@ const styles = StyleSheet.create({
         fontSize: 30
     },
     text_footer: {
-        color: '#05375a',
+        color: '#000000',
         fontSize: 18
     },
     action: {
@@ -326,9 +491,9 @@ const styles = StyleSheet.create({
     },
     textInput: {
         flex: 1,
-        marginTop: Platform.OS === 'ios' ? 0 : -12,
+        marginTop: Platform.OS === 'ios' ? 0 : -5,
         paddingLeft: 10,
-        color: '#05375a',
+        color: '#000000'
     },
     button: {
         alignItems: 'center',

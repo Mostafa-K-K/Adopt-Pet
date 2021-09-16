@@ -8,10 +8,15 @@ const userSchema = new Schema({
         maxLength: 50,
         required: true
     },
-    password: String,
-    phoneNumber: {
+    password: {
         type: String,
         trim: true,
+        required: true
+    },
+    phone: {
+        type: String,
+        trim: true,
+        unique: true,
         maxLength: 20,
         required: true
     },
@@ -30,8 +35,12 @@ const userSchema = new Schema({
         trim: true,
         required: true
     },
+    address: {
+        type: String,
+        trim: true,
+        required: true
+    },
     birthDate: String,
-    photo: String,
     token: String
 }, {
     collection: 'users'

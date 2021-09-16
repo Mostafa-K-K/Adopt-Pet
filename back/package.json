@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "DEBUG=MongoBack:* nodemon node ./bin/www"
+    "start": "HOST=192.168.43.79 PORT=8000 DEBUG=MongoBack:* nodemon node ./bin/www"
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.12.1",

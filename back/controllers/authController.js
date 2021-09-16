@@ -10,7 +10,7 @@ class AuthController {
         if (_id && token) {
             let decoded = jwt.verify(token, "randomString", { ignoreExpiration: true });
             if (_id == decoded._id) {
-                User.find({ _id, token }, (err, result) => { 
+                User.find({ _id, token }, (err, result) => {
                     if (err) return next(err);
                     res.json({ success: true, result: result[0] });
                 });
@@ -27,10 +27,10 @@ class AuthController {
         let salt = await bcrypt.genSalt(10);
         let hashedPassword = await bcrypt.hash(body['password'], salt);
         body['password'] = hashedPassword;
+
         let user = new User(body);
         user.save((err, response) => {
             if (err) return next(err);
-
             let _id = response._id;
             let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
 
@@ -38,7 +38,7 @@ class AuthController {
                 $set: { token }
             }, (err, result) => {
                 if (err) return next(err);
-                res.json({ success: true, result });
+                res.json({ success: true, result: { _id, token } });
             });
         });
     }
@@ -47,16 +47,20 @@ class AuthController {
         let { username, password } = req.body;
         User.find({ username }, async (err, response) => {
             if (err) return next(err);
-            let isMatch = await bcrypt.compare(password, response[0].password);
-            if (isMatch) {
-                let _id = response[0]._id;
-                let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
-                User.updateOne({ _id }, {
-                    $set: { token }
-                }, (err, result) => {
-                    if (err) return next(err);
-                    res.json({ success: true, result });
-                });
+            if (response.length) {
+                let isMatch = await bcrypt.compare(password, response[0].password);
+                if (isMatch) {
+                    let _id = response[0]._id;
+                    let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
+                    User.updateOne({ _id }, {
+                        $set: { token }
+                    }, (err, result) => {
+                        if (err) return next(err);
+                        res.json({ success: true, result: { _id, token } });
+                    });
+                } else {
+                    res.json({ success: false })
+                }
             } else {
                 res.json({ success: false })
             }
@@ -64,8 +68,8 @@ class AuthController {
     }
 
     async signOut(req, res, next) {
-        let { username } = req.body;
-        User.updateOne({ username }, {
+        let { token } = req.body;
+        User.updateOne({ token }, {
             $set: { token: null }
         }, (err, result) => {
             if (err) return next(err);

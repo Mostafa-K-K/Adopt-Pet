@@ -21,7 +21,7 @@ export default function SplashScreen({ navigation }) {
                 <Animatable.Image
                     animation="bounceIn"
                     duraton="1500"
-                    // source={require('../assets/logo.png')}
+                    source={require('../../assets/logo.png')}
                     style={styles.logo}
                     resizeMode="stretch"
                 />
@@ -32,8 +32,17 @@ export default function SplashScreen({ navigation }) {
                 }]}
                 animation="fadeInUpBig"
             >
-                <Text style={styles.title}>Stay connected with everyone!</Text>
+                <Text style={styles.title}>Pet House</Text>
                 <Text style={styles.text}>Sign in with account</Text>
+                <View style={styles.viewLogoSmall}>
+                    <Animatable.Image
+                        animation="bounceIn"
+                        duraton="1500"
+                        source={require('../../assets/logo.png')}
+                        style={styles.logoSmall}
+                        resizeMode="stretch"
+                    />
+                </View>
                 <View style={styles.button}>
                     <TouchableOpacity
                         style={styles.signIn}
@@ -52,7 +61,7 @@ export default function SplashScreen({ navigation }) {
 }
 
 const { height } = Dimensions.get("screen");
-const height_logo = height * 0.28;
+const height_logo = height * 0.30;
 
 const styles = StyleSheet.create({
     container: {
@@ -76,8 +85,20 @@ const styles = StyleSheet.create({
         width: height_logo,
         height: height_logo
     },
+    logoSmall: {
+        width: height_logo / 3,
+        height: height_logo / 3,
+    },
+    viewLogoSmall: {
+        position: "absolute",
+        bottom: 70,
+        left: 40,
+        transform: [
+            { rotateZ: "-25deg" }
+        ]
+    },
     title: {
-        color: '#05375a',
+        color: '#000000',
         fontSize: 30,
         fontWeight: 'bold'
     },

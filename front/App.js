@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useMemo } from 'react';
+import React, { useState, useEffect, useReducer, useMemo } from 'react';
 
 import {
   View,
@@ -16,11 +16,18 @@ import RootStackScreen from './screens/RootStackScreen';
 
 export default function App() {
 
-  const initialLoginState = {
+  const [initialLoginState, updateState] = useState({
     isLoading: true,
     _id: null,
     token: null,
-  };
+  });
+
+  function setState(nextState) {
+    updateState(prevState => ({
+      ...prevState,
+      ...nextState
+    }))
+  }
 
   const loginReducer = (prevState, action) => {
     switch (action.type) {
@@ -30,21 +37,21 @@ export default function App() {
           token: action.token,
           isLoading: false,
         };
-      case 'LOGIN':
+      case 'SIGNIN':
         return {
           ...prevState,
           _id: action._id,
           token: action.token,
           isLoading: false,
         };
-      case 'LOGOUT':
+      case 'SIGNOUT':
         return {
           ...prevState,
           _id: null,
           token: null,
           isLoading: false,
         };
-      case 'REGISTER':
+      case 'SIGNUP':
         return {
           ...prevState,
           _id: action._id,
@@ -59,10 +66,11 @@ export default function App() {
   const authContext = useMemo(() => ({
 
     signIn: async (user) => {
-      setToken('fgkj');
-      setIsLoading(false);
-      const token = String(user[0].token);
-      const _id = String(user[0]._id);
+      const _id = String(user._id);
+      const token = String(user.token);
+
+      setState({ token: token });
+      setState({ isLoading: false });
 
       try {
         await AsyncStorage.setItem('token', token);
@@ -71,12 +79,12 @@ export default function App() {
         console.log(e);
       }
 
-      dispatch({ type: 'LOGIN', _id: _id, token: token });
+      dispatch({ type: 'SIGNIN', _id: _id, token: token });
     },
 
     signOut: async () => {
-      setToken(null);
-      setIsLoading(false);
+      setState({ token: null });
+      setState({ isLoading: false });
 
       try {
         await AsyncStorage.removeItem('token');
@@ -85,12 +93,24 @@ export default function App() {
         console.log(e);
       }
 
-      dispatch({ type: 'LOGOUT' });
+      dispatch({ type: 'SIGNOUT' });
     },
 
-    signUp: () => {
-      setToken('fgkj');
-      setIsLoading(false);
+    signUp: async (user) => {
+      const _id = String(user._id);
+      const token = String(user.token);
+
+      setState({ token: token });
+      setState({ isLoading: false });
+
+      try {
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('_id', _id);
+      } catch (e) {
+        console.log(e);
+      }
+
+      dispatch({ type: 'SIGNUP', _id: _id, token: token });
     }
 
   }), []);

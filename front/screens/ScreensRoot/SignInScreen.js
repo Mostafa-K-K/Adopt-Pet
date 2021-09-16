@@ -14,22 +14,21 @@ import * as Animatable from 'react-native-animatable';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 
-// import { AuthContext } from '../components/context';
-
-// import Users from '../model/users';
+import { AuthContext } from '../../components/context';
+import API from '../../API';
 
 export default function SignInScreen({ navigation }) {
 
-    // const { signIn } = useContext(AuthContext);
+    const { signIn } = useContext(AuthContext);
 
     const [state, updateState] = useState({
         username: '',
         password: '',
 
-        isValidUser: true,
+        isValidUser: false,
         isValidUserIcon: false,
 
-        isValidPassword: true,
+        isValidPassword: false,
         secureTextEntry: true,
     });
 
@@ -40,41 +39,53 @@ export default function SignInScreen({ navigation }) {
         }))
     }
 
-    function textInputChange(val) {
+    function handleUsernameChange(val) {
+        val = val.replace(/\s/g, '');
         setState({ username: val });
-
-        (val.trim().length >= 6) ?
-            setState({ isValidUser: true, isValidUserIcon: true }) :
-            setState({ isValidUser: false, isValidUserIcon: false });
+        (val == '') ?
+            setState({ isValidUser: false })
+            :
+            (val.trim().length >= 6) ?
+                setState({ isValidUser: false, isValidUserIcon: true }) :
+                setState({ isValidUser: true, isValidUserIcon: false });
     }
 
     function handlePasswordChange(val) {
+        val = val.replace(/\s/g, '');
         setState({ password: val });
-
-        (val.trim().length >= 8) ?
-            setState({ isValidPassword: true }) :
-            setState({ isValidPassword: false });
+        (val == '') ?
+            setState({ isValidPassword: false })
+            :
+            (val.trim().length >= 8) ?
+                setState({ isValidPassword: false }) :
+                setState({ isValidPassword: true });
     }
 
-    function loginHandle() {
-        // const foundUser = Users.filter(item => {
-        //     return userName == item.username && password == item.password;
-        // });
-
-        // if (data.username.length == 0 || data.password.length == 0) {
-        //     Alert.alert('Wrong Input!', 'Username or password field cannot be empty.', [
-        //         { text: 'Okay' }
-        //     ]);
-        //     return;
-        // }
-
-        // if (foundUser.length == 0) {
-        //     Alert.alert('Invalid User!', 'Username or password is incorrect.', [
-        //         { text: 'Okay' }
-        //     ]);
-        //     return;
-        // }
-        // signIn(foundUser);
+    function handleSignIn() {
+        let reqBody = {
+            username: state.username,
+            password: state.password
+        }
+        if (!state.isValidUser && !state.isValidPassword && state.password != '' && state.username != '') {
+            API.post(`signIn`, reqBody)
+                .then(res => {
+                    const success = res.data.success;
+                    if (success) {
+                        const data = res.data.result;
+                        signIn(data);
+                    }
+                    else {
+                        setState({
+                            username: "",
+                            password: ""
+                        });
+                    }
+                });
+        }
+        else {
+            if (reqBody.username == '') setState({ isValidUser: true });
+            if (reqBody.password == '') setState({ isValidPassword: true });
+        }
     }
 
     return (
@@ -103,7 +114,8 @@ export default function SignInScreen({ navigation }) {
                         placeholderTextColor="#666666"
                         style={styles.textInput}
                         autoCapitalize="none"
-                        onChangeText={(val) => textInputChange(val)}
+                        value={state.username}
+                        onChangeText={(val) => handleUsernameChange(val)}
                     />
                     {state.isValidUserIcon ?
                         <Animatable.View
@@ -117,10 +129,11 @@ export default function SignInScreen({ navigation }) {
                         </Animatable.View>
                         : null}
                 </View>
-                {state.isValidUser ? null :
+                {state.isValidUser ?
                     <Animatable.View animation="fadeInLeft" duration={500}>
                         <Text style={styles.errorMsg}>Username must be 6 characters long.</Text>
                     </Animatable.View>
+                    : null
                 }
 
 
@@ -139,6 +152,7 @@ export default function SignInScreen({ navigation }) {
                         secureTextEntry={state.secureTextEntry ? true : false}
                         style={styles.textInput}
                         autoCapitalize="none"
+                        value={state.password}
                         onChangeText={(val) => handlePasswordChange(val)}
                     />
                     <TouchableOpacity
@@ -159,10 +173,11 @@ export default function SignInScreen({ navigation }) {
                         }
                     </TouchableOpacity>
                 </View>
-                {state.isValidPassword ? null :
+                {state.isValidPassword ?
                     <Animatable.View animation="fadeInLeft" duration={500}>
                         <Text style={styles.errorMsg}>Password must be 8 characters long.</Text>
                     </Animatable.View>
+                    : null
                 }
 
 
@@ -172,7 +187,7 @@ export default function SignInScreen({ navigation }) {
                 <View style={styles.button}>
                     <TouchableOpacity
                         style={styles.signIn}
-                        onPress={loginHandle}
+                        onPress={handleSignIn}
                     >
                         <Text style={[styles.textSign, {
                             color: '#fff'
@@ -218,12 +233,12 @@ const styles = StyleSheet.create({
         paddingVertical: 30
     },
     text_header: {
-        color: '#fff',
+        color: '#FFFFFF',
         fontWeight: 'bold',
         fontSize: 30
     },
     text_footer: {
-        color: '#05375a',
+        color: '#000000',
         fontSize: 18
     },
     action: {
@@ -244,7 +259,7 @@ const styles = StyleSheet.create({
         flex: 1,
         marginTop: Platform.OS === 'ios' ? 0 : -12,
         paddingLeft: 10,
-        color: '#05375a',
+        color: '#000000'
     },
     errorMsg: {
         color: '#FF0000',
