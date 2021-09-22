@@ -2,18 +2,18 @@ const { Schema, model } = require('mongoose');
 
 const blogSchema = new Schema({
     name: String,
-    type: String,
+    animal: String,
+    kind: String,
     photo: String,
     gender: String,
     age: Number,
     color: String,
+    description: String,
     date: String,
-    passport: Boolean,
     available: {
         type: Boolean,
         default: true
     },
-    description: String,
     _User: {
         type: Schema.Types.ObjectId,
         ref: 'User'

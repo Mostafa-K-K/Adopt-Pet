@@ -1,6 +1,23 @@
 const User = require('../models/User');
+const bcrypt = require("bcryptjs");
 
 class UsersController {
+
+    isValidUsername(req, res, next) {
+        let { username } = req.body;
+        User.findOne({ username }, 'username', (err, result) => {
+            if (err) return next(err);
+            res.json({ success: true, result });
+        })
+    }
+
+    isValidPhone(req, res, next) {
+        let { phone } = req.body;
+        User.findOne({ phone }, 'phone', (err, result) => {
+            if (err) return next(err);
+            res.json({ success: true, result });
+        })
+    }
 
     getAll(req, res, next) {
         User.find({}, (err, result) => {

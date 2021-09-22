@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 
 class AuthController {
 
-    async initialiseDate(req, res, next) {
+    async initialiseData(req, res, next) {
         let { _id, token } = req.body;
         if (_id && token) {
             let decoded = jwt.verify(token, "randomString", { ignoreExpiration: true });
@@ -15,10 +15,10 @@ class AuthController {
                     res.json({ success: true, result: result[0] });
                 });
             } else {
-                res.json({ success: false })
+                res.json({ success: false });
             }
         } else {
-            res.json({ success: false })
+            res.json({ success: false });
         }
     }
 

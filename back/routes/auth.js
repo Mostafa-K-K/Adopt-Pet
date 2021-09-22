@@ -5,6 +5,6 @@ var authController = require('../controllers/authController');
 router.post('/signIn', authController.signIn);
 router.post('/signUp', authController.signUp);
 router.post('/signOut', authController.signOut);
-router.post('/initialiseDate', authController.initialiseDate);
+router.post('/initialiseData', authController.initialiseData);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API from '../../API';
 
 import {
   View,
@@ -9,11 +10,24 @@ import {
 import * as Animatable from 'react-native-animatable';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-export default function SearchScreen() {
+export default function SearchScreen(props) {
 
   const [posts, setPosts] = useState([]);
 
-  useEffect(() => { }, [])
+  useEffect(() => {
+    function fetchData() {
+      API.post(`blogsfilter`, { name: props.name })
+        .then(res => {
+          const success = res.data.success;
+          console.log(res.data);
+          if (success) {
+            const result = res.data.result;
+            setPosts(result)
+          }
+        });
+    }
+    fetchData();
+  }, [props.name]);
 
   return (
     <View style={styles.container}>
@@ -35,8 +49,17 @@ export default function SearchScreen() {
             &nbsp; &nbsp; Search ...
           </Text>
         </Animatable.View>
+        :
+        <View>
+          {posts.map(post =>
+            <View key={post._id}>
+              <Text key={post._id}>
+                {post.name} , {post.animal} , {post.kind} , {post.gender} , {post.description}
+              </Text>
+            </View>
+          )}
+        </View>
 
-        : <Text>Posts</Text>
       }
 
     </View>
@@ -49,7 +72,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    backgroundColor:'#FFFFFF'
+    backgroundColor: '#FFFFFF'
   },
   icon: {
     backgroundColor: 'transparent',

@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 
 import {
   View,
@@ -27,11 +27,18 @@ import ProfileScreen from './ScreensMain/ProfileScreen';
 import LikedPosts from './ScreensMain/LikedPosts';
 import CreatePostScreen from './ScreensMain/CreatePostScreen';
 
+import InfoPostScreen from './ScreensMain/InfoPostScreen';
+import EditPostScreen from './ScreensMain/EditPostScreen';
+import EditProfileScreen from './ScreensMain/EditProfileScreen';
+import ChangeUsernameScreen from './ScreensMain/ChangeUsernameScreen';
+import ChangePasswordScreen from './ScreensMain/ChangePasswordScreen';
+import ChangeInformationScreen from './ScreensMain/ChangeInformationScreen';
+
+
 import * as Animatable from 'react-native-animatable';
 
 import API from '../API';
-import { AsyncStorage } from 'react-native';
-import { AuthContext } from '../components/context';
+import SessionContext from '../components/SessionContext';
 
 const Stack = createStackNavigator();
 const Tab = createMaterialBottomTabNavigator();
@@ -79,17 +86,7 @@ function HomeStackScreen({ navigation }) {
       <Stack.Screen
         name='createpost'
         component={CreatePostScreen}
-        options={{
-          title: 'Create Post',
-          headerRight: () => (
-            <Icon
-              name='ios-add'
-              size={30}
-              style={styles.icon}
-            />
-          )
-        }}
-
+        options={{ title: 'Create Post' }}
       />
 
       <Stack.Screen
@@ -138,7 +135,7 @@ function SearchStackScreen() {
     >
       <Stack.Screen
         name='Search'
-        component={SearchScreen}
+        children={() => <SearchScreen name={state.name} />}
         options={{
           headerRight: () => (
             state.show ? null :
@@ -166,16 +163,13 @@ function SearchStackScreen() {
                     color='#000'
                     value={state.name}
                     maxLength={20}
-                    onChangeText={(val) =>
-                      val == '' ?
-                        setState({ name: val, show: false }) :
-                        setState({ name: val })
-                    }
+                    onChangeText={(val) => setState({ name: val })}
                   />
                 </Animatable.View>
               </View>
           )
         }}
+        searchString={state.name}
       />
     </Stack.Navigator>
   )
@@ -183,7 +177,7 @@ function SearchStackScreen() {
 
 function RequestsStackScreen() {
 
-  const [isSent, setIsSent] = useState(false)
+  const [isSent, setIsSent] = useState(false);
 
   return (
     <Stack.Navigator
@@ -232,10 +226,12 @@ function RequestsStackScreen() {
 
 function ProfileStackScreen() {
 
-  const { signOut } = useContext(AuthContext);
+  const {
+    session: { user: { token } },
+    actions: { signOut }
+  } = useContext(SessionContext);
 
   async function handleLogout() {
-    let token = await AsyncStorage.getItem('token');
     await API.post('signOut', { token });
     await signOut();
   }
@@ -257,15 +253,52 @@ function ProfileStackScreen() {
         component={ProfileScreen}
         options={{
           headerRight: () => (
-            <Icon.Button
+            <Icon
               name='ios-log-out-outline'
               size={25}
-              backgroundColor='transparent'
+              style={styles.iconButton}
               onPress={handleLogout}
             />
           )
         }}
       />
+
+      <Stack.Screen
+        name='editprofile'
+        component={EditProfileScreen}
+        options={{ title: 'Edit Profile' }}
+      />
+
+      <Stack.Screen
+        name='changeinformation'
+        component={ChangeInformationScreen}
+        options={{ title: 'Personel Information' }}
+      />
+
+      <Stack.Screen
+        name='changeusername'
+        component={ChangeUsernameScreen}
+        options={{ title: 'Username' }}
+      />
+
+      <Stack.Screen
+        name='changepassword'
+        component={ChangePasswordScreen}
+        options={{ title: 'Password' }}
+      />
+
+      <Stack.Screen
+        name='infopost'
+        component={InfoPostScreen}
+        options={{ title: 'info Post' }}
+      />
+
+      <Stack.Screen
+        name='editpost'
+        component={EditPostScreen}
+        options={{ title: 'edit Post' }}
+      />
+
     </Stack.Navigator>
   )
 }

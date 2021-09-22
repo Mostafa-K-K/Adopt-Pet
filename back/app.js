@@ -29,11 +29,11 @@ app.get('/', (req, res) => {
 });
 
 app.use(authRouter);
-app.use('/users', usersRouter);
-app.use('/blogs', blogsRouter);
+app.use(usersRouter);
+app.use(blogsRouter);
 app.use('/status', statusRouter);
 app.use('/requests', requestsRouter);
-app.use('/likes', likesRouter);
+app.use(likesRouter);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

@@ -14,12 +14,12 @@ import * as Animatable from 'react-native-animatable';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 
-import { AuthContext } from '../../components/context';
 import API from '../../API';
+import SessionContext from '../../components/SessionContext';
 
 export default function SignInScreen({ navigation }) {
 
-    const { signIn } = useContext(AuthContext);
+    const { actions: { signIn } } = useContext(SessionContext);
 
     const [state, updateState] = useState({
         username: '',

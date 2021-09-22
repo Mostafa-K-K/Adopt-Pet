@@ -19,11 +19,15 @@ class LikesController {
     }
 
     delete(req, res, next) {
-        let { id } = req.params;
-        Like.deleteOne({ _id: id }, (err, result) => {
+        let { _User, _Blog } = req.body;
+        Like.find({ _User, _Blog }, (err, result) => {
             if (err) return next(err);
-            res.json({ success: true, result });
-        })
+            if (result.length)
+                Like.deleteOne({ _id: result[0]._id }, (err, result) => {
+                    if (err) return next(err);
+                    res.json({ success: true, result });
+                })
+        });
     }
 
 }

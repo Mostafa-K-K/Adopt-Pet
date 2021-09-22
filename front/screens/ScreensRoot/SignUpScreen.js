@@ -17,13 +17,13 @@ import * as Animatable from 'react-native-animatable';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 
-import { AuthContext } from '../../components/context';
-import API from '../../API';
 import moment from 'moment';
+import API from '../../API';
+import SessionContext from '../../components/SessionContext';
 
 export default function SignInScreen({ navigation }) {
 
-    const { signUp } = useContext(AuthContext);
+    const { actions: { signUp } } = useContext(SessionContext);
 
     const [state, updateState] = useState({
         firstName: '',
@@ -37,6 +37,9 @@ export default function SignInScreen({ navigation }) {
         conPassword: '',
 
         show: false,
+
+        usernameExist: false,
+        phoneExist: false,
 
         isValidFirstName: false,
         isValidLastName: false,
@@ -66,6 +69,7 @@ export default function SignInScreen({ navigation }) {
             (val.trim().length >= 6) ?
                 setState({ isValidUser: false }) :
                 setState({ isValidUser: true });
+        setState({ usernameExist: false });
     }
 
     function handlePasswordChange(val) {
@@ -116,12 +120,32 @@ export default function SignInScreen({ navigation }) {
             && !state.isValidPassword
             && !state.isValidConfPassword
         ) {
-            API.post(`signUp`, reqBody)
+            API.post(`isvalidusername`, reqBody)
                 .then(res => {
                     const success = res.data.success;
                     if (success) {
-                        const data = res.data.result;
-                        signUp(data);
+                        const result = res.data.result;
+                        if (result) setState({ usernameExist: true });
+                        API.post(`isvalidphone`, reqBody)
+                            .then(res => {
+                                const success = res.data.success;
+                                if (success) {
+                                    const data = res.data.result;
+                                    if (data) setState({ phoneExist: true });
+
+                                    if (!result && !data) {
+                                        API.post(`signUp`, reqBody)
+                                            .then(res => {
+                                                const success = res.data.success;
+                                                if (success) {
+                                                    const user = res.data.result;
+                                                    signUp(user);
+                                                }
+                                            });
+                                    }
+
+                                }
+                            });
                     }
                 });
         }
@@ -150,7 +174,7 @@ export default function SignInScreen({ navigation }) {
                     <Text style={styles.text_footer}>First Name</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name='user'
+                            name='hashtag'
                             color='#D2B48C'
                             size={20}
                         />
@@ -173,7 +197,7 @@ export default function SignInScreen({ navigation }) {
                     }]}>Last Name</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name='user'
+                            name='pencil'
                             color='#D2B48C'
                             size={20}
                         />
@@ -196,12 +220,7 @@ export default function SignInScreen({ navigation }) {
                     }]}>Gender</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name='male'
-                            color='#D2B48C'
-                            size={24}
-                        />
-                        <FontAwesome
-                            name='female'
+                            name='venus-mars'
                             color='#D2B48C'
                             size={24}
                         />
@@ -241,7 +260,7 @@ export default function SignInScreen({ navigation }) {
                             placeholder='Phone Number'
                             style={styles.textInput}
                             autoCapitalize='none'
-                            onChangeText={(val) => setState({ phone: val, isValidPhone: false })}
+                            onChangeText={(val) => setState({ phone: val, isValidPhone: false, phoneExist: false })}
                             keyboardType='numeric'
                         />
                     </View>
@@ -249,7 +268,12 @@ export default function SignInScreen({ navigation }) {
                         <Animatable.View animation='fadeInLeft' duration={500}>
                             <Text style={styles.errorMsg}>Please fill this field</Text>
                         </Animatable.View>
-                        : null
+                        :
+                        state.phoneExist ?
+                            <Animatable.View animation='fadeInLeft' duration={500}>
+                                <Text style={styles.errorMsg}>Phone number already exist.</Text>
+                            </Animatable.View>
+                            : null
                     }
 
                     <Text style={[styles.text_footer, {
@@ -257,7 +281,7 @@ export default function SignInScreen({ navigation }) {
                     }]}>Address</Text>
                     <View style={styles.action}>
                         <FontAwesome
-                            name='map'
+                            name='map-o'
                             color='#D2B48C'
                             size={20}
                         />
@@ -321,13 +345,13 @@ export default function SignInScreen({ navigation }) {
                             value={state.username}
                             onChangeText={(val) => handleUsernameChange(val)}
                         />
-                        {state.isValidUser && state.username !== '' ?
+                        {!state.isValidUser && state.username !== '' ?
                             <Animatable.View
                                 animation='bounceIn'
                             >
                                 <Feather
                                     name='check-circle'
-                                    color='#D2B48C'
+                                    color={state.usernameExist ? '#FF0000' : '#D2B48C'}
                                     size={20}
                                 />
                             </Animatable.View>
@@ -337,7 +361,12 @@ export default function SignInScreen({ navigation }) {
                         <Animatable.View animation='fadeInLeft' duration={500}>
                             <Text style={styles.errorMsg}>Username must be 6 characters long.</Text>
                         </Animatable.View>
-                        : null
+                        :
+                        state.usernameExist ?
+                            <Animatable.View animation='fadeInLeft' duration={500}>
+                                <Text style={styles.errorMsg}>Username already exist.</Text>
+                            </Animatable.View>
+                            : null
                     }
 
                     <Text style={[styles.text_footer, {
@@ -387,7 +416,7 @@ export default function SignInScreen({ navigation }) {
                     }]}>Confirm Password</Text>
                     <View style={styles.action}>
                         <Feather
-                            name='lock'
+                            name='unlock'
                             color='#D2B48C'
                             size={20}
                         />
