@@ -9,8 +9,7 @@ import {
   Alert,
   Modal,
   ScrollView,
-  Dimensions,
-  TouchableOpacity
+  Dimensions
 } from 'react-native';
 
 import {
@@ -19,13 +18,11 @@ import {
   Paragraph
 } from 'react-native-paper';
 
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-
 import moment from 'moment';
 import API from '../../API';
 import { get } from 'lodash';
 
-export default function InfoPostScreen(props) {
+export default function InfoPostUserScreen(props) {
 
   const _Post = get(props.route.params, '_Post');
 
@@ -49,14 +46,6 @@ export default function InfoPostScreen(props) {
       ...prevState,
       ...nextState
     }))
-  }
-
-  function handleAvailability(value) {
-    API.put(`blogs/${_Post}`, { available: value })
-      .then(res => {
-        const success = res.data.success;
-        if (success) fetchData();
-      });
   }
 
   function handleDelete() {
@@ -100,17 +89,6 @@ export default function InfoPostScreen(props) {
     <View style={styles.container}>
       <ScrollView>
 
-        <TouchableOpacity
-          style={styles.editIcon}
-          onPress={() => props.navigation.navigate('editpost', { _Post })}
-        >
-          <FontAwesome
-            name='edit'
-            color='#D2B48C'
-            size={34}
-          />
-        </TouchableOpacity>
-
         <Card.Content>
           <Title>{state.animal} &nbsp; {state.kind}</Title>
           <Paragraph>Published on {moment(state.date).fromNow()}</Paragraph>
@@ -125,6 +103,7 @@ export default function InfoPostScreen(props) {
           <View>
             <Text>Animal: {state.animal}</Text>
             <Text>Kind: {state.kind}</Text>
+            <Text>Available: {state.available}</Text>
             <Text>Name : {state.name}</Text>
             <Text>Gender : {state.gender}</Text>
             <Text>Age : {state.age}</Text>
@@ -144,22 +123,6 @@ export default function InfoPostScreen(props) {
         </Card.Content>
 
         <View style={styles.container}>
-          <View style={[{ width: "60%", margin: 10 }]}>
-            {state.available ?
-              <Button
-                title="Deactivate"
-                color='#D2B48C'
-                onPress={() => handleAvailability(false)}
-              />
-              :
-              <Button
-                title="Activate"
-                color='#D2B48C'
-                onPress={() => handleAvailability(true)}
-              />
-            }
-          </View>
-
           <View style={[{ width: "60%", margin: 10 }]}>
             <Button
               title='Delete'
@@ -214,11 +177,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-  },
-  editIcon: {
-    position: 'absolute',
-    right: 10,
-    top: 10
   },
   modalText: {
     marginBottom: 15,

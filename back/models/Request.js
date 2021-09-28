@@ -3,10 +3,14 @@ const { Schema, model } = require('mongoose');
 const requestSchema = new Schema({
     date: String,
     status: {
-        type: Boolean,
-        default: false
+        type: String,
+        default: 'Waiting'
     },
-    _User: {
+    _Receiver: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    _Sender: {
         type: Schema.Types.ObjectId,
         ref: 'User'
     },

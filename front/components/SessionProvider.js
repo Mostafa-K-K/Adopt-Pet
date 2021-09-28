@@ -17,15 +17,18 @@ export default function SessionProvider({ children }) {
     async function signIn(user) {
         const _id = String(user._id);
         const token = String(user.token);
+        const role_id = String(user.role_id);
         setSession({
             user: {
                 _id: _id,
-                token: token
+                token: token,
+                role_id: role_id
             }
         });
         try {
             await AsyncStorage.setItem('_id', _id);
             await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('role_id', role_id);
         } catch (e) {
             console.log(e);
         }
@@ -35,10 +38,10 @@ export default function SessionProvider({ children }) {
         setSession({
             user: {}
         });
-        console.log("ksbhisjbnin");
         try {
             await AsyncStorage.removeItem('_id');
             await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('role_id');
         } catch (e) {
             console.log(e);
         }
@@ -47,15 +50,18 @@ export default function SessionProvider({ children }) {
     async function signUp(user) {
         const _id = String(user._id);
         const token = String(user.token);
+        const role_id = String(user.role_id);
         setSession({
             user: {
                 _id: _id,
-                token: token
+                token: token,
+                role_id: role_id
             }
         });
         try {
             await AsyncStorage.setItem('_id', _id);
             await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('role_id', role_id);
         } catch (e) {
             console.log(e);
         }
@@ -77,7 +83,8 @@ export default function SessionProvider({ children }) {
                                 user: {
                                     ...session.user,
                                     _id: data._id,
-                                    token: data.token
+                                    token: data.token,
+                                    role_id: data.role_id
                                 }
                             })
                     }
@@ -88,7 +95,9 @@ export default function SessionProvider({ children }) {
     async function getSession() {
         let _id = await AsyncStorage.getItem('_id');
         let token = await AsyncStorage.getItem('token');
-        setSession({ user: { _id, token } });
+        let role_id = await AsyncStorage.getItem('role_id');
+
+        setSession({ user: { _id, token, role_id } });
         initializeUser();
     }
 

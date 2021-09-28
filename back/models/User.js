@@ -41,7 +41,11 @@ const userSchema = new Schema({
         required: true
     },
     birthDate: String,
-    token: String
+    token: String,
+    role_id: {
+        type: String,
+        default: 'user'
+    }
 }, {
     collection: 'users'
 });

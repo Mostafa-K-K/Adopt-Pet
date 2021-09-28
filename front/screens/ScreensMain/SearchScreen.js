@@ -4,6 +4,7 @@ import API from '../../API';
 import {
   View,
   Text,
+  ScrollView,
   StyleSheet
 } from 'react-native';
 
@@ -14,42 +15,42 @@ export default function SearchScreen(props) {
 
   const [posts, setPosts] = useState([]);
 
+  function fetchData() {
+    API.post(`blogsfilter`, { name: props.name })
+      .then(res => {
+        const success = res.data.success;
+        if (success) {
+          const result = res.data.result;
+          setPosts(result)
+        }
+      });
+  }
+
   useEffect(() => {
-    function fetchData() {
-      API.post(`blogsfilter`, { name: props.name })
-        .then(res => {
-          const success = res.data.success;
-          console.log(res.data);
-          if (success) {
-            const result = res.data.result;
-            setPosts(result)
-          }
-        });
-    }
     fetchData();
   }, [props.name]);
 
-  return (
+  return (!posts.length ?
+    <Animatable.View
+      style={styles.containerEmpty}
+      animation="pulse"
+      easing="ease-out"
+      iterationCount="infinite"
+    >
+      <Icon
+        name='ios-search'
+        size={25}
+        style={styles.icon}
+      />
+      <Text
+        style={[styles.icon, { fontSize: 24 }]}
+      >
+        &nbsp; &nbsp; Search ...
+      </Text>
+    </Animatable.View>
+    :
     <View style={styles.container}>
-      {!posts.length ?
-        <Animatable.View
-          style={styles.container}
-          animation="pulse"
-          easing="ease-out"
-          iterationCount="infinite"
-        >
-          <Icon
-            name='ios-search'
-            size={25}
-            style={styles.icon}
-          />
-          <Text
-            style={[styles.icon, { fontSize: 24 }]}
-          >
-            &nbsp; &nbsp; Search ...
-          </Text>
-        </Animatable.View>
-        :
+      <ScrollView>
         <View>
           {posts.map(post =>
             <View key={post._id}>
@@ -59,19 +60,21 @@ export default function SearchScreen(props) {
             </View>
           )}
         </View>
-
-      }
-
+      </ScrollView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  containerEmpty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+    backgroundColor: '#FFFFFF'
+  },
+  container: {
+    flex: 1,
     backgroundColor: '#FFFFFF'
   },
   icon: {

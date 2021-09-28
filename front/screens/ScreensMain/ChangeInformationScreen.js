@@ -50,10 +50,9 @@ export default function ChangeInformationScreen({ navigation }) {
   }
 
   function handleDate(e, nextDate) {
-    const prevDate = state.birthDate
+    const prevDate = state.birthDate;
     const date = nextDate || prevDate;
-    setState({ birthDate: date, show: false })
-    console.log(nextDate);
+    setState({ birthDate: date, show: false });
   };
 
   function handleUpdate() {
@@ -81,7 +80,6 @@ export default function ChangeInformationScreen({ navigation }) {
           const success = res.data.success;
           if (success) {
             const result = res.data.result;
-            console.log(result);
             if (!result || (result && result._id == _id)) {
               API.put(`users/${_id}`, reqBody)
                 .then(res => {

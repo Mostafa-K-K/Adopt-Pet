@@ -31,12 +31,14 @@ export default function CreatePostScreen({ navigation }) {
         animal: '',
         kind: '',
         photo: '',
-        gender: '',
+        gender: 'Male',
         age: '',
-        color: 'white',
+        color: '#FFFFFF',
         description: '',
 
-        showColor: false
+        showColor: false,
+
+        validPost: true,
     });
 
     const [colors] = useState([
@@ -72,7 +74,6 @@ export default function CreatePostScreen({ navigation }) {
         }))
     }
 
-
     async function handleCameraImage() {
 
         let result = await ImagePicker.launchCameraAsync({
@@ -96,33 +97,54 @@ export default function CreatePostScreen({ navigation }) {
             quality: 1,
         });
 
-        console.log(result);
-
         if (!result.cancelled) {
             setState({ photo: result });
         }
     };
 
     function handleSubmit() {
-        let uri = state.photo.uri;
-        let name = uri.split('/').pop();
-        let match = /\.(\w+)$/.exec(name);
-        let type = match ? `image/${match[1]}` : `image`;
 
-        let reqBody = new FormData();
-        reqBody.append('name', state.name.trim());
-        reqBody.append('animal', state.animal.trim());
-        reqBody.append('kind', state.kind.trim());
-        reqBody.append('gender', state.gender);
-        reqBody.append('age', state.age);
-        reqBody.append('color', state.color);
-        reqBody.append('description', state.description);
-        reqBody.append('date', new Date());
-        reqBody.append('_User', _id);
-        reqBody.append('fileSrc', { uri, name, type });
+        let data = {
+            name: state.name.trim(),
+            animal: state.animal.trim(),
+            kind: state.kind.trim(),
+            photo: state.photo,
+            age: state.age.trim(),
+            description: state.description.trim(),
+            gender: state.gender,
+            color: state.color
+        }
 
-        API.post(`blogs`, reqBody)
-            .then(navigation.goBack())
+        if (data.name != '' &&
+            data.animal != '' &&
+            data.kind != '' &&
+            data.photo != '' &&
+            data.age != '' &&
+            data.description != '') {
+
+            let uri = state.photo.uri;
+            let name = uri.split('/').pop();
+            let match = /\.(\w+)$/.exec(name);
+            let type = match ? `image/${match[1]}` : `image`;
+
+            let reqBody = new FormData();
+            reqBody.append('name', data.name);
+            reqBody.append('animal', data.animal);
+            reqBody.append('kind', data.kind);
+            reqBody.append('gender', data.gender);
+            reqBody.append('age', data.age);
+            reqBody.append('color', data.color);
+            reqBody.append('description', data.description);
+            reqBody.append('date', new Date().toString());
+            reqBody.append('_User', _id);
+            reqBody.append('fileSrc', { uri, name, type });
+
+            API.post(`blogs`, reqBody)
+                .then(res => {
+                    const success = res.data.success;
+                    if (success) navigation.navigate('home');
+                });
+        } else (setState({ validPost: false }))
     }
 
     return (
@@ -131,212 +153,217 @@ export default function CreatePostScreen({ navigation }) {
                 animation='fadeInUpBig'
             >
                 <ScrollView>
-                    <View style={styles.actionImage}>
-                        {state.photo == '' ?
+                    <View style={styles.subContainer}>
+                        <View style={styles.actionImage}>
+                            {state.photo == '' ?
+                                <FontAwesome
+                                    name='question'
+                                    color='#D2B48C'
+                                    size={100}
+                                    style={{
+                                        width: 200,
+                                        height: 200,
+                                        padding: 20,
+                                        textAlign: 'center',
+                                        textAlignVertical: 'center',
+                                        borderRadius: 30,
+                                        borderWidth: 5,
+                                        borderColor: '#D2B48C'
+                                    }}
+                                />
+                                :
+                                < Image
+                                    style={{
+                                        width: 200,
+                                        height: 200,
+                                        borderRadius: 30
+                                    }}
+                                    source={{ uri: state.photo.uri }}
+                                />
+                            }
+
+                            <View style={styles.actionImageIcon}>
+                                <TouchableOpacity onPress={handleCameraImage}>
+                                    <FontAwesome
+                                        name='camera'
+                                        color='#D2B48C'
+                                        size={24}
+                                    />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity onPress={handleGalleryImage}>
+                                    <FontAwesome
+                                        name='picture-o'
+                                        color='#D2B48C'
+                                        size={24}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <View style={styles.action}>
                             <FontAwesome
-                                name='question'
+                                name='user'
                                 color='#D2B48C'
-                                size={100}
-                                style={{
-                                    width: 200,
-                                    height: 200,
-                                    padding: 20,
-                                    textAlign: 'center',
-                                    textAlignVertical: 'center',
-                                    borderRadius: 30,
-                                    borderWidth: 5,
-                                    borderColor: '#D2B48C'
-                                }}
+                                size={24}
+                                style={styles.iconWidth}
                             />
-                            :
-                            < Image
-                                style={{
-                                    width: 200,
-                                    height: 200,
-                                    borderRadius: 30
-                                }}
-                                source={{
-                                    uri: state.photo.uri,
-                                }}
+                            <TextInput
+                                placeholder='Name'
+                                value={state.name}
+                                onChangeText={(val) => setState({ name: val })}
+                                style={styles.textInput}
                             />
+                        </View>
+
+                        <View style={styles.action}>
+                            <FontAwesome
+                                name='paint-brush'
+                                color='#D2B48C'
+                                size={24}
+                                style={styles.iconWidth}
+                                onPress={() => setState({ showColor: !state.showColor })}
+                            />
+
+                            {state.showColor ?
+                                <NativeColorPicker
+                                    colors={colors}
+                                    selectedColor={state.color}
+                                    itemSize={30}
+                                    // horizontal={true}
+                                    animate="scale"
+                                    shadow
+                                    markerType="checkmark"
+                                    markerDisplay="color"
+                                    onSelect={val => setState({ color: val, showColor: false })}
+                                />
+                                :
+                                <TouchableOpacity onPress={() => setState({ showColor: !state.showColor })}>
+                                    <View
+                                        style={{
+                                            width: 100,
+                                            borderRadius: 10,
+                                            height: 20,
+                                            backgroundColor: state.color,
+                                            borderWidth: 1,
+                                            borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
+                                        }}
+                                    />
+                                </TouchableOpacity>
+                            }
+                        </View>
+
+                        <View style={styles.action}>
+                            <FontAwesome
+                                name='gg-circle'
+                                color='#D2B48C'
+                                size={24}
+                                style={styles.iconWidth}
+                            />
+                            <TextInput
+                                placeholder='Animal'
+                                value={state.animal}
+                                onChangeText={(val) => setState({ animal: val })}
+                                style={styles.textInput}
+                            />
+                        </View>
+
+                        <View style={styles.action}>
+                            <FontAwesome
+                                name='paw'
+                                color='#D2B48C'
+                                size={24}
+                                style={styles.iconWidth}
+                            />
+                            <TextInput
+                                placeholder='Kind'
+                                value={state.kind}
+                                onChangeText={(val) => setState({ kind: val })}
+                                style={styles.textInput}
+                            />
+                        </View>
+
+                        <View style={styles.action}>
+                            <FontAwesome
+                                name='child'
+                                color='#D2B48C'
+                                size={24}
+                                style={styles.iconWidth}
+                            />
+                            <TextInput
+                                keyboardType='numeric'
+                                placeholder='Age'
+                                value={state.age}
+                                onChangeText={(val) => setState({ age: val })}
+                                style={styles.textInput}
+                            />
+                        </View>
+
+                        <View style={styles.action}>
+                            <FontAwesome
+                                name='venus-mars'
+                                color='#D2B48C'
+                                size={24}
+                                style={styles.iconWidth}
+                            />
+                            <RadioButton.Group
+                                value={state.gender}
+                                onValueChange={val => setState({ gender: val })}
+                            >
+                                <View style={{ flexDirection: 'row', marginTop: -15 }}>
+                                    <RadioButton.Item
+                                        label='Male'
+                                        value='Male'
+                                        position='leading'
+                                        color='#D2B48C'
+                                        uncheckedColor='#D2B48C'
+                                    />
+                                    <RadioButton.Item
+                                        label='Female'
+                                        value='Female'
+                                        position='leading'
+                                        color='#D2B48C'
+                                        uncheckedColor='#D2B48C'
+                                    />
+                                </View>
+                            </RadioButton.Group>
+                        </View>
+
+                        <View style={styles.action}>
+                            <FontAwesome
+                                name='pencil-square-o'
+                                color='#D2B48C'
+                                size={24}
+                                style={styles.iconWidth}
+                            />
+                            <TextInput
+                                placeholder='Description'
+                                value={state.description}
+                                onChangeText={(val) => setState({ description: val })}
+                                style={styles.textInput}
+                            />
+                        </View>
+
+                        {state.validPost ? null :
+                            < Animatable.View animation='fadeInLeft' duration={500} useNativeDriver={true}>
+                                <Text style={styles.errorMsg}>Please Fill in all Required Fields.</Text>
+                            </Animatable.View>
                         }
 
-                        <View style={styles.actionImageIcon}>
-                            <TouchableOpacity onPress={handleCameraImage}>
-                                <FontAwesome
-                                    name='camera'
-                                    color='#D2B48C'
-                                    size={24}
-                                />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={handleGalleryImage}>
-                                <FontAwesome
-                                    name='picture-o'
-                                    color='#D2B48C'
-                                    size={24}
-                                />
+                        <View style={styles.button}>
+                            <TouchableOpacity
+                                style={styles.signIn}
+                                onPress={handleSubmit}
+                            >
+                                <Text style={[styles.textSign, {
+                                    color: '#fff'
+                                }]}>Create</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
-
-                    <View style={styles.action}>
-                        <FontAwesome
-                            name='user'
-                            color='#D2B48C'
-                            size={24}
-                            style={styles.iconWidth}
-                        />
-                        <TextInput
-                            placeholder='Name'
-                            value={state.name}
-                            onChangeText={(val) => setState({ name: val })}
-                            style={styles.textInput}
-                        />
-                    </View>
-
-                    <View style={styles.action}>
-                        <FontAwesome
-                            name='paint-brush'
-                            color='#D2B48C'
-                            size={24}
-                            style={styles.iconWidth}
-                            onPress={() => setState({ showColor: !state.showColor })}
-                        />
-
-                        {state.showColor ?
-                            <NativeColorPicker
-                                colors={colors}
-                                selectedColor={state.color}
-                                itemSize={30}
-                                // horizontal={true}
-                                animate="scale"
-                                shadow
-                                markerType="checkmark"
-                                markerDisplay="color"
-                                onSelect={val => setState({ color: val, showColor: false })}
-                            />
-                            :
-                            <TouchableOpacity onPress={() => setState({ showColor: !state.showColor })}>
-                                <View
-                                    style={{
-                                        width: 100,
-                                        borderRadius: 10,
-                                        height: 20,
-                                        backgroundColor: state.color,
-                                        borderWidth: 1,
-                                        borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
-                                    }}
-                                />
-                            </TouchableOpacity>
-                        }
-                    </View>
-
-                    <View style={styles.action}>
-                        <FontAwesome
-                            name='gg-circle'
-                            color='#D2B48C'
-                            size={24}
-                            style={styles.iconWidth}
-                        />
-                        <TextInput
-                            placeholder='Animal'
-                            value={state.animal}
-                            onChangeText={(val) => setState({ animal: val })}
-                            style={styles.textInput}
-                        />
-                    </View>
-
-                    <View style={styles.action}>
-                        <FontAwesome
-                            name='paw'
-                            color='#D2B48C'
-                            size={24}
-                            style={styles.iconWidth}
-                        />
-                        <TextInput
-                            placeholder='Kind'
-                            value={state.kind}
-                            onChangeText={(val) => setState({ kind: val })}
-                            style={styles.textInput}
-                        />
-                    </View>
-
-                    <View style={styles.action}>
-                        <FontAwesome
-                            name='child'
-                            color='#D2B48C'
-                            size={24}
-                            style={styles.iconWidth}
-                        />
-                        <TextInput
-                            keyboardType='numeric'
-                            placeholder='Age'
-                            value={state.age}
-                            onChangeText={(val) => setState({ age: val })}
-                            style={styles.textInput}
-                        />
-                    </View>
-
-                    <View style={styles.action}>
-                        <FontAwesome
-                            name='venus-mars'
-                            color='#D2B48C'
-                            size={24}
-                            style={styles.iconWidth}
-                        />
-                        <RadioButton.Group
-                            value={state.gender}
-                            onValueChange={val => setState({ gender: val })}
-                        >
-                            <View style={{ flexDirection: 'row', marginTop: -15 }}>
-                                <RadioButton.Item
-                                    label='Male'
-                                    value='Male'
-                                    position='leading'
-                                    color='#D2B48C'
-                                    uncheckedColor='#D2B48C'
-                                />
-                                <RadioButton.Item
-                                    label='Female'
-                                    value='Female'
-                                    position='leading'
-                                    color='#D2B48C'
-                                    uncheckedColor='#D2B48C'
-                                />
-                            </View>
-                        </RadioButton.Group>
-                    </View>
-
-                    <View style={styles.action}>
-                        <FontAwesome
-                            name='pencil-square-o'
-                            color='#D2B48C'
-                            size={24}
-                            style={styles.iconWidth}
-                        />
-                        <TextInput
-                            placeholder='Description'
-                            value={state.description}
-                            onChangeText={(val) => setState({ description: val })}
-                            style={styles.textInput}
-                        />
-                    </View>
-
-                    <View style={styles.button}>
-                        <TouchableOpacity
-                            style={styles.signIn}
-                            onPress={handleSubmit}
-                        >
-                            <Text style={[styles.textSign, {
-                                color: '#fff'
-                            }]}>Create</Text>
-                        </TouchableOpacity>
-                    </View>
-
                 </ScrollView>
-            </Animatable.View>
-        </View>
+            </Animatable.View >
+        </View >
     )
 }
 
@@ -348,6 +375,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#FFFFFF',
+    },
+    subContainer: {
         paddingLeft: 20,
         paddingRight: 20,
         paddingBottom: 20,
@@ -398,7 +427,6 @@ const styles = StyleSheet.create({
     textInput: {
         flex: 1,
         marginTop: Platform.OS === 'ios' ? 0 : -5,
-        paddingLeft: 0,
         color: '#000000'
     },
     button: {

@@ -12,7 +12,6 @@ var mongoose = require('mongoose');
 var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var blogsRouter = require('./routes/blogs');
-var statusRouter = require('./routes/status');
 var requestsRouter = require('./routes/requests');
 var likesRouter = require('./routes/likes');
 
@@ -31,8 +30,7 @@ app.get('/', (req, res) => {
 app.use(authRouter);
 app.use(usersRouter);
 app.use(blogsRouter);
-app.use('/status', statusRouter);
-app.use('/requests', requestsRouter);
+app.use(requestsRouter);
 app.use(likesRouter);
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -58,7 +56,7 @@ app.use(function (err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   res.status(err.status || 500);
-  res.render('error');
+  res.json({ success: false, error: err });
 });
 
 module.exports = app;

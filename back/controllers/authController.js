@@ -32,13 +32,14 @@ class AuthController {
         user.save((err, response) => {
             if (err) return next(err);
             let _id = response._id;
+            let role_id = response.role_id;
             let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
 
             User.updateOne({ _id }, {
                 $set: { token }
             }, (err, result) => {
                 if (err) return next(err);
-                res.json({ success: true, result: { _id, token } });
+                res.json({ success: true, result: { _id, token, role_id } });
             });
         });
     }
@@ -51,12 +52,13 @@ class AuthController {
                 let isMatch = await bcrypt.compare(password, response[0].password);
                 if (isMatch) {
                     let _id = response[0]._id;
+                    let role_id = response[0].role_id;
                     let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
                     User.updateOne({ _id }, {
                         $set: { token }
                     }, (err, result) => {
                         if (err) return next(err);
-                        res.json({ success: true, result: { _id, token } });
+                        res.json({ success: true, result: { _id, token, role_id } });
                     });
                 } else {
                     res.json({ success: false })

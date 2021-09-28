@@ -1,4 +1,9 @@
 const User = require('../models/User');
+const Like = require('../models/Like');
+const Blog = require('../models/Blog');
+const Request = require('../models/Request');
+
+const fs = require('fs');
 const bcrypt = require("bcryptjs");
 
 class UsersController {
@@ -52,12 +57,63 @@ class UsersController {
         });
     }
 
-    delete(req, res, next) {
+    async delete(req, res, next) {
         let { id } = req.params;
-        User.deleteOne({ _id: id }, (err, result) => {
+
+        await Like.find({ _User: id }, (err, likes) => {
+            if (err) return next(err);
+            if (likes.length)
+                likes.map(async like => {
+                    await Like.deleteOne({ _id: like._id }, (err, response) => {
+                        if (err) return next(err)
+                    });
+                });
+        });
+
+        await Request.find({
+            $or: [
+                { _Sender: id },
+                { _Receiver: id }
+            ]
+        }, (err, requests) => {
+            if (err) return next(err);
+            if (requests.length)
+                requests.map(async request => {
+                    await Request.deleteOne({ _id: request._id }, (err, response) => {
+                        if (err) return next(err)
+                    });
+                });
+        });
+
+        await Blog.find({ _User: id }, (err, blogs) => {
+            if (err) return next(err);
+
+            if (blogs.length)
+
+                blogs.map(async blog => {
+                    await Like.find({ _Blog: blog._id }, (err, likes) => {
+                        if (err) return next(err);
+                        likes.map(async like => {
+                            await Like.deleteOne({ _id: like._id }, (err, response) => {
+                                if (err) return next(err)
+                            });
+                        });
+                    });
+
+                    fs.unlink(`public/uploads/${blog.photo}`, (async err => {
+                        if (err) console.log(err);
+                        await Blog.deleteOne({ _id: blog._id }, (err, result) => {
+                            if (err) return next(err);
+                        })
+                    }));
+                });
+        });
+
+        await User.deleteOne({ _id: id }, (err, result) => {
             if (err) return next(err);
             res.json({ success: true, result });
-        })
+        });
+
     }
 
 }

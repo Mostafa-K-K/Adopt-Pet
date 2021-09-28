@@ -1,4 +1,5 @@
 const Request = require('../models/Request');
+const Blog = require('../models/Blog');
 
 class RequestsController {
 
@@ -17,13 +18,46 @@ class RequestsController {
         });
     }
 
-    post(req, res, next) {
-        let body = req.body;
-        let post = new Request(body);
-        post.save((err, result) => {
+    getByReceiver(req, res, next) {
+        let { _Receiver } = req.params;
+        let { status } = req.body;
+        Request
+            .find({ _Receiver, status })
+            .populate('_Blog')
+            .populate('_Sender')
+            .populate('_Receiver')
+            .exec((err, result) => {
+                if (err) return next(err);
+                console.log(result);
+                res.json({ success: true, result });
+            })
+    }
+
+    getBySender(req, res, next) {
+        let { _Sender } = req.params;
+        let { status } = req.body;
+        Request
+            .find({ _Sender, status })
+            .populate('_Blog')
+            .populate('_Sender')
+            .populate('_Receiver')
+            .exec((err, result) => {
+                if (err) return next(err);
+                res.json({ success: true, result });
+            })
+    }
+
+    async post(req, res, next) {
+
+        let { _User: _Sender, _Blog: _Blog } = req.body;
+        let { _User: _Receiver } = await Blog.findById(_Blog);
+
+        let request = new Request({ _Blog, _Sender, _Receiver });
+
+        request.save((err, result) => {
             if (err) return next(err);
             res.json({ success: true, result });
-        });
+        })
     }
 
     put(req, res, next) {

@@ -21,8 +21,11 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 import HomeScreen from './ScreensMain/HomeScreen';
 import SearchScreen from './ScreensMain/SearchScreen';
-import RequestsScreen from './ScreensMain/RequestsScreen';
 import ProfileScreen from './ScreensMain/ProfileScreen';
+
+import RequestsSenderScreen from './ScreensMain/RequestsSenderScreen';
+import RequestsReceiverScreen from './ScreensMain/RequestsReceiverScreen';
+import ContactUserInfo from './ScreensMain/ContactUserInfo';
 
 import LikedPosts from './ScreensMain/LikedPosts';
 import CreatePostScreen from './ScreensMain/CreatePostScreen';
@@ -33,7 +36,6 @@ import EditProfileScreen from './ScreensMain/EditProfileScreen';
 import ChangeUsernameScreen from './ScreensMain/ChangeUsernameScreen';
 import ChangePasswordScreen from './ScreensMain/ChangePasswordScreen';
 import ChangeInformationScreen from './ScreensMain/ChangeInformationScreen';
-
 
 import * as Animatable from 'react-native-animatable';
 
@@ -175,7 +177,7 @@ function SearchStackScreen() {
   )
 }
 
-function RequestsStackScreen() {
+function RequestsStackScreen({ navigation }) {
 
   const [isSent, setIsSent] = useState(false);
 
@@ -193,8 +195,8 @@ function RequestsStackScreen() {
       }}
     >
       <Stack.Screen
-        name='Request'
-        component={RequestsScreen}
+        name='receiverRequest'
+        component={isSent ? RequestsSenderScreen : RequestsReceiverScreen}
         options={{
           headerLeft: () => (
             <TouchableOpacity
@@ -220,6 +222,15 @@ function RequestsStackScreen() {
           )
         }}
       />
+
+      <Stack.Screen
+        name='contactuserinfo'
+        component={ContactUserInfo}
+        options={{ title: "Contact Info" }}
+      />
+
+
+
     </Stack.Navigator>
   )
 }
