@@ -1,19 +1,22 @@
-var createError = require('http-errors');
-var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var express = require('express');
+var mongoose = require('mongoose');
+var bodyParser = require("body-parser");
+var createError = require('http-errors');
+var cookieParser = require('cookie-parser');
+
+const User = require('./models/User');
+const bcrypt = require("bcryptjs");
 
 require('dotenv').config();
-
-var bodyParser = require("body-parser");
-var mongoose = require('mongoose');
 
 var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var blogsRouter = require('./routes/blogs');
-var requestsRouter = require('./routes/requests');
 var likesRouter = require('./routes/likes');
+var reportsRouter = require('./routes/reports');
+var requestsRouter = require('./routes/requests');
 
 var app = express();
 
@@ -30,8 +33,9 @@ app.get('/', (req, res) => {
 app.use(authRouter);
 app.use(usersRouter);
 app.use(blogsRouter);
-app.use(requestsRouter);
 app.use(likesRouter);
+app.use(reportsRouter);
+app.use(requestsRouter);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -46,6 +50,28 @@ try {
 } catch (e) {
   console.log(e)
 }
+
+User.find({}, async (err, users) => {
+  if (!users || !users.length) {
+    let body = {
+      username: '@admin',
+      password: 'admin123',
+      role_id: 'admin',
+      phone: '00000000',
+      firstName: 'Admin',
+      lastName: 'Admin',
+      gender: 'Male',
+      address: 'Lebanon',
+      birthDate: '1991-01-01T00:00:00.000Z'
+    };
+    let salt = await bcrypt.genSalt(10);
+    let hashedPassword = await bcrypt.hash(body['password'], salt);
+    body['password'] = hashedPassword;
+
+    let user = new User(body);
+    user.save((err, response) => { });
+  }
+});
 
 app.use(function (req, res, next) {
   next(createError(404));

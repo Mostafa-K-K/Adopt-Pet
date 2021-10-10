@@ -11,7 +11,7 @@ import SessionContext from '../components/SessionContext';
 export default function Screens() {
 
     let { session: { user: { token, role_id } } } = useContext(SessionContext);
-    console.log(role_id);
+
     return (
         <NavigationContainer>
             {!token ?
@@ -24,7 +24,6 @@ export default function Screens() {
                         <MainTabScreen />
                         :
                         null
-
             }
         </NavigationContainer >
     );

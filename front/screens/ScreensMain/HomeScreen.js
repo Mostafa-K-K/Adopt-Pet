@@ -7,10 +7,10 @@ import {
   ScrollView,
   Image,
   Button,
-  Alert,
   Modal,
   Dimensions,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  TouchableOpacity,
 } from 'react-native';
 
 import {
@@ -19,6 +19,8 @@ import {
   Paragraph
 } from 'react-native-paper';
 
+import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
@@ -26,15 +28,18 @@ import moment from 'moment';
 import API from '../../API';
 import SessionContext from '../../components/SessionContext';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
 
   const { session: { user: { _id } } } = useContext(SessionContext);
 
   const [state, updateState] = useState({
     posts: [],
     likes: '',
+    reports: '',
     requests: '',
 
+    confirm: false,
+    confirmReport: false,
     confirmRequest: false,
     reqPost: ''
   });
@@ -45,8 +50,6 @@ export default function HomeScreen() {
       ...nextState
     }))
   }
-
-  const [refreshing, setRefreshing] = useState(false);
 
   function handleLike(post_id) {
     let like = state.likes;
@@ -113,7 +116,31 @@ export default function HomeScreen() {
           setState({ requests: request, reqPost: '' });
         }
       });
+  }
 
+  function handleReport() {
+    let report = state.reports;
+    report[state.reqPost] = true;
+
+    setState({
+      reports: report,
+      confirmReport: false
+    });
+
+    let reqBody = {
+      _User: _id,
+      _Blog: state.reqPost
+    }
+
+    API.post(`reports`, reqBody)
+      .then(res => {
+        const success = res.data.success;
+        if (!success) {
+          let request = state.requests;
+          request[state.reqPost] = false;
+          setState({ requests: request, reqPost: '' });
+        }
+      });
   }
 
   let lastTap = null;
@@ -151,7 +178,7 @@ export default function HomeScreen() {
                 setState({ likes: likeArr });
               }
             });
-          API.get(`getBySender/${_id}`)
+          API.post(`getBySender/${_id}`)
             .then(res => {
               const success = res.data.success;
               if (success) {
@@ -164,16 +191,22 @@ export default function HomeScreen() {
                 })
               }
             });
+          API.post(`getByReporter`, { _Reporter: _id })
+            .then(res => {
+              const success = res.data.success;
+              if (success) {
+                const reports = res.data.result;
+                let reqArr = {};
+                blogs.map(b => {
+                  let isReport = reports.find(r => b._id == r._Blog);
+                  isReport ? reqArr[b._id] = true : reqArr[b._id] = false;
+                  setState({ reports: reqArr });
+                })
+              }
+            });
         }
       });
   }
-
-  // const onRefresh = useCallback(() => {
-  //   setRefreshing(true);
-
-  //   wait(2000).then(() => setRefreshing(false));
-  // }, []);
-
 
   useFocusEffect(
     useCallback(() => {
@@ -186,12 +219,28 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        {!state.posts.length ?
-          <Text>no result</Text>
-          :
-          state.posts.map(post =>
+    !state.posts.length ?
+      <Animatable.View
+        style={styles.containerViewEmpty}
+        animation="pulse"
+        easing="ease-out"
+        iterationCount="infinite"
+      >
+        <Icon
+          name='search'
+          size={25}
+          style={styles.icon}
+        />
+        <Text
+          style={[styles.icon, { fontSize: 24 }]}
+        >
+          &nbsp; &nbsp; Loading
+        </Text>
+      </Animatable.View>
+      :
+      <View style={styles.container}>
+        <ScrollView>
+          {state.posts.map(post =>
             <Card
               key={post._id}
               style={styles.cartStyle}
@@ -199,7 +248,7 @@ export default function HomeScreen() {
 
               <Card.Content>
                 <Title>{post.animal} &nbsp; {post.kind}</Title>
-                <Paragraph>Published on {moment(post.date).fromNow()}</Paragraph>
+                <Paragraph>Published on {moment(new Date(post.date)).fromNow()}</Paragraph>
               </Card.Content>
 
               <TouchableWithoutFeedback onPress={() => handleDoubleTap(post._id)}>
@@ -211,97 +260,242 @@ export default function HomeScreen() {
 
               <Card.Content>
                 <Card.Content>
-                  <View>
-                    <Text>Name : {post.name}</Text>
-                    <Text>Gender : {post.gender}</Text>
-                    <Text>Age : {post.age}</Text>
-                    <Text>Color : </Text>
-                    <View
-                      style={{
-                        backgroundColor: post.color,
-                        height: 15,
-                        width: 30,
-                        borderRadius: 10,
-                        borderWidth: 1,
-                        borderColor: post.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
-                      }}
-                    />
+                  <View style={{ marginBottom: 10 }}>
+                    <View style={styles.flexRowView}>
+                      <Text style={styles.boldTextStyle}>Name : </Text>
+                      <Text>{post.name}</Text>
+                    </View>
+
+                    <View style={styles.flexRowView}>
+                      <Text style={styles.boldTextStyle}>Gender : </Text>
+                      <Text>{post.gender}</Text>
+                    </View>
+
+                    <View style={styles.flexRowView}>
+                      <Text style={styles.boldTextStyle}>Age : </Text>
+                      <Text>{post.age} months</Text>
+                    </View>
+
+                    <View style={styles.flexRowView}>
+                      <Text style={styles.boldTextStyle}>Color : </Text>
+                      <View
+                        style={{
+                          backgroundColor: post.color,
+                          height: 15,
+                          width: 30,
+                          borderRadius: 10,
+                          borderWidth: 1,
+                          borderColor: post.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
+                        }}
+                      />
+                    </View>
+
                     <Text>{post.description}</Text>
                   </View>
+                  {state.likes[post._id] ?
+                    <Icon
+                      name='paw'
+                      size={35}
+                      color='#D11A2A'
+                      onPress={() => handleUnlike(post._id)}
+                      style={styles.likeStyle}
+                    />
+                    :
+                    <Icon
+                      name='paw-outline'
+                      size={35}
+                      color='#D2B48C'
+                      onPress={() => handleLike(post._id)}
+                      style={styles.likeStyle}
+                    />
+                  }
                 </Card.Content>
               </Card.Content>
 
-              {state.likes[post._id] ?
-                < FontAwesome
-                  name='heart'
-                  size={24}
-                  color='#D2B48C'
-                  onPress={() => handleUnlike(post._id)}
-                />
-                :
-                <FontAwesome
-                  name='heart-o'
-                  size={24}
-                  color='#D2B48C'
-                  onPress={() => handleLike(post._id)}
-                />
-              }
-
               {post._User == _id ? null :
-                state.requests[post._id] ?
-                  <Text>Request sent!</Text>
-                  :
-                  <FontAwesome
-                    name='send'
-                    size={24}
-                    color='#D2B48C'
-                    onPress={() => setState({ reqPost: post._id, confirmRequest: true })}
-                  />
+                state.confirm ? null :
+                  <View style={styles.viewMoreOption}>
+                    <TouchableOpacity
+                      style={styles.moreOption}
+                      onPress={() => setState({ reqPost: post._id, confirm: true })}
+                    >
+                      <FontAwesome
+                        name='ellipsis-v'
+                        size={25}
+                        color='#D2B48C'
+
+                      />
+                    </TouchableOpacity>
+                  </View>
               }
             </Card>
           )
-        }
+          }
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={state.confirmRequest}
-          onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
-            setState({ confirmRequest: !state.confirmRequest });
-          }}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalText}>Send Request?</Text>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={state.confirm}
+            onRequestClose={() => {
+              setState({ confirm: false, reqPost: '' })
+            }}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalText}>Manage Post</Text>
 
-              <View
-                style={[{
-                  width: width / 2,
-                  margin: 5,
-                }]}
-              >
-                <Button
-                  title='Send'
-                  color='#D2B48C'
-                  onPress={handleRequest}
-                />
+                <View
+                  style={[{
+                    width: width / 2,
+                    margin: 5,
+                  }]}
+                >
+                  <Button
+                    title='Send Request'
+                    color='#D2B48C'
+                    onPress={() => setState({ confirm: false, confirmRequest: true })}
+                  />
+                </View>
+
+                <View
+                  style={[{
+                    width: width / 2,
+                    margin: 5,
+                  }]}
+                >
+                  <Button
+                    title='Report Post'
+                    color='#D2B48C'
+                    onPress={() => setState({ confirm: false, confirmReport: true })}
+                  />
+                </View>
+
+                <View style={[{ width: width / 2, margin: 5 }]}>
+                  <Button
+                    title='Cancel'
+                    color='#D2B48C'
+                    onPress={() => setState({ confirm: false, reqPost: '' })}
+                  />
+                </View>
+
               </View>
-
-              <View style={[{ width: width / 2, margin: 5 }]}>
-                <Button
-                  title='Cancel'
-                  color='#D2B48C'
-                  onPress={() => setState({ confirmRequest: false })}
-                />
-              </View>
-
             </View>
-          </View>
-        </Modal>
-      </ScrollView >
+          </Modal>
 
-    </View >
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={state.confirmReport}
+            onRequestClose={() => {
+              setState({ confirmReport: false, reqPost: '' })
+            }}
+          >
+            <View style={styles.centeredView}>
+              {state.reports[state.reqPost] ?
+                <View style={styles.modalView}>
+                  <Text style={styles.modalText}>Report!</Text>
+                  <Text>We got your report</Text>
+                  <Text>Thank you!</Text>
+                  <View style={[{ width: width / 2, margin: 5 }]}>
+                    <Button
+                      title='Ok'
+                      color='#D2B48C'
+                      onPress={() => setState({ confirmReport: false, reqPost: '' })}
+                    />
+                  </View>
+                </View>
+                :
+                <View style={styles.modalView}>
+                  <Text style={styles.modalText}>Send Report?</Text>
+                  <View
+                    style={[{
+                      width: width / 2,
+                      margin: 5,
+                    }]}
+                  >
+                    <Button
+                      title='Send'
+                      color='#D2B48C'
+                      onPress={handleReport}
+                    />
+                  </View>
+
+                  <View style={[{ width: width / 2, margin: 5 }]}>
+                    <Button
+                      title='Cancel'
+                      color='#D2B48C'
+                      onPress={() => setState({ confirmReport: false, reqPost: '' })}
+                    />
+                  </View>
+                </View>
+              }
+            </View>
+          </Modal>
+
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={state.confirmRequest}
+            onRequestClose={() => {
+              setState({ confirmRequest: false, reqPost: '' })
+            }}
+          >
+            <View style={styles.centeredView}>
+              {state.requests[state.reqPost] ?
+                <View style={styles.modalView}>
+                  <Text style={styles.modalText}>Request!</Text>
+                  <Text>You sent a request</Text>
+                  <Text>Please check your request list</Text>
+                  <Text>Thank you!</Text>
+                  <View style={[{ width: width / 2, margin: 5 }]}>
+                    <Button
+                      title='List Request'
+                      color='#D2B48C'
+                      onPress={() => navigation.navigate('requests')}
+                    />
+                  </View>
+
+                  <View style={[{ width: width / 2, margin: 5 }]}>
+                    <Button
+                      title='Ok'
+                      color='#D2B48C'
+                      onPress={() => setState({ confirmRequest: false, reqPost: '' })}
+                    />
+                  </View>
+                </View>
+                :
+                <View style={styles.modalView}>
+                  <Text style={styles.modalText}>Send Request?</Text>
+
+                  <View
+                    style={[{
+                      width: width / 2,
+                      margin: 5,
+                    }]}
+                  >
+                    <Button
+                      title='Send'
+                      color='#D2B48C'
+                      onPress={handleRequest}
+                    />
+                  </View>
+
+                  <View style={[{ width: width / 2, margin: 5 }]}>
+                    <Button
+                      title='Cancel'
+                      color='#D2B48C'
+                      onPress={() => setState({ confirmRequest: false, reqPost: '' })}
+                    />
+                  </View>
+
+                </View>
+              }
+            </View>
+          </Modal>
+
+        </ScrollView >
+
+      </View >
   )
 }
 
@@ -311,6 +505,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF'
+  },
+  containerViewEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+  },
+  icon: {
+    backgroundColor: 'transparent',
+    color: 'rgba(0,0,0,0.3)',
+    fontSize: 35.
   },
   cartStyle: {
     shadowOffset: { width: 10, height: 10 },
@@ -345,5 +551,23 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5
   },
-  heart: {}
+  moreOption: {
+  },
+  viewMoreOption: {
+    position: 'absolute',
+    top: 30,
+    right: 15,
+  },
+  flexRowView: {
+    flexDirection: 'row',
+  },
+  boldTextStyle: {
+    fontWeight: 'bold',
+    marginRight: 5
+  },
+  likeStyle: {
+    position: 'absolute',
+    top: 15,
+    right: 0
+  }
 });

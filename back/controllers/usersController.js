@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Like = require('../models/Like');
 const Blog = require('../models/Blog');
+const Report = require('../models/Report');
 const Request = require('../models/Request');
 
 const fs = require('fs');
@@ -25,7 +26,7 @@ class UsersController {
     }
 
     getAll(req, res, next) {
-        User.find({}, (err, result) => {
+        User.find({ role_id: 'user' }, (err, result) => {
             if (err) return next(err);
             res.json({ success: true, result });
         })
@@ -60,59 +61,84 @@ class UsersController {
     async delete(req, res, next) {
         let { id } = req.params;
 
-        await Like.find({ _User: id }, (err, likes) => {
-            if (err) return next(err);
-            if (likes.length)
-                likes.map(async like => {
-                    await Like.deleteOne({ _id: like._id }, (err, response) => {
-                        if (err) return next(err)
-                    });
-                });
-        });
-
-        await Request.find({
-            $or: [
-                { _Sender: id },
-                { _Receiver: id }
-            ]
-        }, (err, requests) => {
-            if (err) return next(err);
-            if (requests.length)
-                requests.map(async request => {
-                    await Request.deleteOne({ _id: request._id }, (err, response) => {
-                        if (err) return next(err)
-                    });
-                });
-        });
-
-        await Blog.find({ _User: id }, (err, blogs) => {
-            if (err) return next(err);
-
-            if (blogs.length)
-
-                blogs.map(async blog => {
-                    await Like.find({ _Blog: blog._id }, (err, likes) => {
-                        if (err) return next(err);
-                        likes.map(async like => {
-                            await Like.deleteOne({ _id: like._id }, (err, response) => {
+        await Like
+            .find({ _User: id }, (err, likes) => {
+                if (err) return next(err);
+                if (likes.length)
+                    likes.map(async like => {
+                        await Like
+                            .deleteOne({ _id: like._id }, (err, response) => {
                                 if (err) return next(err)
                             });
-                        });
                     });
+            });
 
-                    fs.unlink(`public/uploads/${blog.photo}`, (async err => {
-                        if (err) console.log(err);
-                        await Blog.deleteOne({ _id: blog._id }, (err, result) => {
-                            if (err) return next(err);
-                        })
-                    }));
-                });
-        });
+        await Request
+            .find({
+                $or: [
+                    { _Sender: id },
+                    { _Receiver: id }
+                ]
+            }, (err, requests) => {
+                if (err) return next(err);
+                if (requests.length)
+                    requests.map(async request => {
+                        await Request
+                            .deleteOne({ _id: request._id }, (err, response) => {
+                                if (err) return next(err)
+                            });
+                    });
+            });
 
-        await User.deleteOne({ _id: id }, (err, result) => {
-            if (err) return next(err);
-            res.json({ success: true, result });
-        });
+        await Report
+            .find({
+                $or: [
+                    { _Reporter: id },
+                    { _Reported: id }
+                ]
+            }, (err, reports) => {
+                if (err) return next(err);
+                if (reports.length)
+                    reports.map(async report => {
+                        await Report
+                            .deleteOne({ _id: report._id }, (err, response) => {
+                                if (err) return next(err)
+                            });
+                    });
+            });
+
+        await Blog
+            .find({ _User: id }, (err, blogs) => {
+                if (err) return next(err);
+
+                if (blogs.length)
+                    blogs.map(async blog => {
+                        await Like
+                            .find({ _Blog: blog._id }, (err, likes) => {
+                                if (err) return next(err);
+                                likes.map(async like => {
+                                    await Like
+                                        .deleteOne({ _id: like._id }, (err, response) => {
+                                            if (err) return next(err)
+                                        });
+                                });
+                            });
+
+                        fs.unlink(`public/uploads/${blog.photo}`, (async err => {
+                            if (err) console.log(err);
+                            await Blog
+                                .deleteOne({ _id: blog._id }, (err, result) => {
+                                    if (err) return next(err);
+                                });
+                        }));
+                    });
+            });
+
+        await User
+            .deleteOne({ _id: id }, (err, result) => {
+                if (err) return next(err);
+                res.json({ success: true, result });
+            });
 
     }
 

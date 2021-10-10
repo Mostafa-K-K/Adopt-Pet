@@ -13,6 +13,8 @@ import {
   TouchableOpacity
 } from 'react-native';
 
+import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { get } from 'lodash';
@@ -98,67 +100,87 @@ export default function ProfileUserScreen(props) {
     <View style={styles.container}>
 
       <ScrollView>
-        <View>
+
+        <View style={styles.styleTextProfile}>
           <Text>Username : {state.username}</Text>
           <Text>Name : {state.firstName} {state.lastName}</Text>
           <Text>Phone Number : {state.phone}</Text>
           <Text>Address : {state.address}</Text>
           <Text>Birth Date : {moment(state.birthDate).format('D   MMMM   YYYY')}</Text>
-
           <Button
             title='Dlete User'
+            color='#D11A2A'
             onPress={() => setState({ confirmDelete: true })}
           />
+
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={state.confirmDelete}
+            onRequestClose={() => {
+              setState({ confirmDelete: false });
+            }}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalText}>Delete post?</Text>
+
+                <View style={[{ width: width / 2, margin: 5 }]}>
+                  <Button
+                    title='Delete'
+                    color='#D11A2A'
+                    onPress={handleDelete}
+                  />
+                </View>
+
+                <View style={[{ width: width / 2, margin: 5 }]}>
+                  <Button
+                    title='Cancel'
+                    color='#D2B48C'
+                    onPress={() => setState({ confirmDelete: false })}
+                  />
+                </View>
+
+              </View>
+            </View>
+          </Modal>
+
         </View>
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={state.confirmDelete}
-          onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
-            setState({ confirmDelete: !state.confirmDelete });
-          }}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.modalText}>Delete post?</Text>
-
-              <View style={[{ width: width / 2, margin: 5 }]}>
-                <Button
-                  title='Delete'
-                  color='#FF0000'
-                  onPress={handleDelete}
-                />
-              </View>
-
-              <View style={[{ width: width / 2, margin: 5 }]}>
-                <Button
-                  title='Cancel'
-                  color='#D2B48C'
-                  onPress={() => setState({ confirmDelete: false })}
-                />
-              </View>
-
-            </View>
-          </View>
-        </Modal>
-
-
         <View style={styles.listBlogs}>
-          {state.posts.map(post =>
-            <TouchableOpacity
-              key={post._id}
-              style={styles.blog}
-              onPress={() => props.navigation.navigate('infopostuser', { _Post: post._id })}
+          {!state.posts.length ?
+            <Animatable.View
+              style={styles.containerViewEmpty}
+              animation="pulse"
+              easing="ease-out"
+              iterationCount="infinite"
             >
-              <Image
-                style={{ width: width / 3, height: width / 3 }}
-                source={{ uri: `http://192.168.43.79:8000/uploads/${post.photo}` }}
+              <Icon
+                name='image-outline'
+                size={25}
+                style={styles.icon}
               />
+              <Text
+                style={[styles.icon, { fontSize: 24 }]}
+              >
+                &nbsp; &nbsp; No Post
+              </Text>
+            </Animatable.View>
+            :
+            state.posts.map(post =>
+              <TouchableOpacity
+                key={post._id}
+                style={styles.blog}
+                onPress={() => props.navigation.navigate('infopostuser', { _Post: post._id })}
+              >
+                <Image
+                  style={{ width: width / 3, height: width / 3 }}
+                  source={{ uri: `http://192.168.43.79:8000/uploads/${post.photo}` }}
+                />
 
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            )
+          }
         </View>
       </ScrollView>
 
@@ -173,12 +195,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF'
   },
+  containerViewEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    marginTop: 120
+  },
+  icon: {
+    backgroundColor: 'transparent',
+    color: 'rgba(0,0,0,0.3)',
+    fontSize: 35.
+  },
   listBlogs: {
     flexDirection: 'row',
     flexWrap: 'wrap'
   },
   blog: {
     width: width / 3,
+  },
+  styleTextProfile: {
+    padding: 10,
+    height: width / 1.8,
+    flexDirection: 'column',
+    justifyContent: 'space-between'
   },
   modalText: {
     marginBottom: 15,

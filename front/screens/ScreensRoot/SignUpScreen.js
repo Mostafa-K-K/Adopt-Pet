@@ -101,6 +101,7 @@ export default function SignInScreen({ navigation }) {
     };
 
     function handleSignUp() {
+
         let reqBody = {
             firstName: state.firstName.trim(),
             lastName: state.lastName.trim(),
@@ -120,34 +121,23 @@ export default function SignInScreen({ navigation }) {
             && !state.isValidPassword
             && !state.isValidConfPassword
         ) {
-            API.post(`isvalidusername`, reqBody)
-                .then(res => {
-                    const success = res.data.success;
-                    if (success) {
-                        const result = res.data.result;
-                        if (result) setState({ usernameExist: true });
-                        API.post(`isvalidphone`, reqBody)
-                            .then(res => {
-                                const success = res.data.success;
-                                if (success) {
-                                    const data = res.data.result;
-                                    if (data) setState({ phoneExist: true });
 
-                                    if (!result && !data) {
-                                        API.post(`signUp`, reqBody)
-                                            .then(res => {
-                                                const success = res.data.success;
-                                                if (success) {
-                                                    const user = res.data.result;
-                                                    signUp(user);
-                                                }
-                                            });
-                                    }
+            let phones = API.post(`isvalidphone`, reqBody);
+            let usernames = API.post(`isvalidusername`, reqBody);
 
-                                }
-                            });
-                    }
-                });
+            if (phones.data && phones.data.result.length) setState({ phoneExist: true });
+            if (usernames.data && usernames.data.result.length) setState({ usernameExist: true });
+
+            if ((!phones.data || !phones.data.result.length) && (!usernames.data || !usernames.data.result.length)) {
+                API.post(`signUp`, reqBody)
+                    .then(res => {
+                        const success = res.data.success;
+                        if (success) {
+                            const user = res.data.result;
+                            signUp(user);
+                        }
+                    });
+            }
         }
         else {
             if (reqBody.firstName == '') setState({ isValidFirstName: true });
@@ -351,7 +341,7 @@ export default function SignInScreen({ navigation }) {
                             >
                                 <Feather
                                     name='check-circle'
-                                    color={state.usernameExist ? '#FF0000' : '#D2B48C'}
+                                    color={state.usernameExist ? '#D11A2A' : '#D2B48C'}
                                     size={20}
                                 />
                             </Animatable.View>
@@ -529,7 +519,7 @@ const styles = StyleSheet.create({
         marginTop: 50
     },
     errorMsg: {
-        color: '#FF0000',
+        color: '#D11A2A',
         fontSize: 14,
     },
     signIn: {

@@ -15,8 +15,9 @@ import {
     Paragraph
 } from 'react-native-paper';
 
+import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 import moment from 'moment';
 import API from '../../API';
@@ -26,17 +27,46 @@ export default function LikedPosts() {
 
     const { session: { user: { _id } } } = useContext(SessionContext);
 
-    const [posts, setPosts] = useState([]);
+    const [state, updateState] = useState({
+        posts: [],
+        actionLike: true
+    });
 
-    const [actionLike, setActionLike] = useState(true);
+    function setState(nextState) {
+        updateState(prevState => ({
+            ...prevState,
+            ...nextState
+        }))
+    }
+
+    function handleLike(post_id) {
+        let reqBody = {
+            _User: _id,
+            _Blog: post_id
+        }
+
+        API.post(`like`, reqBody)
+            .then(res => {
+                const success = res.data.success;
+                if (success) {
+                    setState({ actionLike: !state.actionLike });
+                }
+            });
+    }
 
     function handleUnlike(post_id) {
         let reqBody = {
             _User: _id,
             _Blog: post_id
         }
+
         API.post(`unlike`, reqBody)
-            .then(setActionLike(!actionLike))
+            .then(res => {
+                const success = res.data.success;
+                if (success) {
+                    setState({ actionLike: !state.actionLike });
+                };
+            });
     }
 
     function fetchData() {
@@ -56,7 +86,7 @@ export default function LikedPosts() {
                                     let blog = blogs.find(b => b._id == l._Blog && l._User == _id)
                                     if (blog) arr.push(blog);
                                 });
-                                setPosts(arr);
+                                setState({ posts: arr })
                             }
                         });
                 }
@@ -71,35 +101,65 @@ export default function LikedPosts() {
 
     useEffect(() => {
         fetchData();
-    }, [actionLike]);
+    }, [state.actionLike]);
 
     return (
-        <View style={styles.container}>
-            <ScrollView>
-                {!posts.length ?
-                    <Text>no result</Text>
-                    :
-                    posts.map(post =>
-                        <Card style={styles.cartStyle}>
-                            <View key={post._id}>
+        !state.posts.length ?
+            <Animatable.View
+                style={styles.containerEmpty}
+                animation="pulse"
+                easing="ease-out"
+                iterationCount="infinite"
+            >
+                <Icon
+                    name='paw-outline'
+                    size={25}
+                    style={styles.icon}
+                />
+                <Text
+                    style={[styles.icon, { fontSize: 24 }]}
+                >
+                    &nbsp; &nbsp; No Likes
+                </Text>
+            </Animatable.View>
+            :
+            <View style={styles.container}>
+                <ScrollView>
+                    {state.posts.map(post =>
+                        <Card
+                            key={post._id}
+                            style={styles.cartStyle}
+                        >
+                            <Card.Content>
+                                <Title>{post.animal} &nbsp; {post.kind}</Title>
+                                <Paragraph>Published on {moment(new Date(post.date)).fromNow()}</Paragraph>
+                            </Card.Content>
 
+                            <Image
+                                style={{ width: width, height: width }}
+                                source={{ uri: `http://192.168.43.79:8000/uploads/${post.photo}` }}
+                            />
+
+                            <Card.Content>
                                 <Card.Content>
-                                    <Title>{post.animal} &nbsp; {post.kind}</Title>
-                                    <Paragraph>Published on {moment(post.date).fromNow()}</Paragraph>
-                                </Card.Content>
+                                    <View>
+                                        <View style={styles.flexRowView}>
+                                            <Text style={styles.boldTextStyle}>Name : </Text>
+                                            <Text>{post.name}</Text>
+                                        </View>
 
-                                <Image
-                                    style={{ width: width, height: width }}
-                                    source={{ uri: `http://192.168.43.79:8000/uploads/${post.photo}` }}
-                                />
+                                        <View style={styles.flexRowView}>
+                                            <Text style={styles.boldTextStyle}>Gender : </Text>
+                                            <Text>{post.gender}</Text>
+                                        </View>
 
-                                <Card.Content>
-                                    <Card.Content>
-                                        <View>
-                                            <Text>Name : {post.name}</Text>
-                                            <Text>Gender : {post.gender}</Text>
-                                            <Text>Age : {post.age}</Text>
-                                            <Text>Color : </Text>
+                                        <View style={styles.flexRowView}>
+                                            <Text style={styles.boldTextStyle}>Age : </Text>
+                                            <Text>{post.age} months</Text>
+                                        </View>
+
+                                        <View style={styles.flexRowView}>
+                                            <Text style={styles.boldTextStyle}>Color : </Text>
                                             <View
                                                 style={{
                                                     backgroundColor: post.color,
@@ -110,33 +170,60 @@ export default function LikedPosts() {
                                                     borderColor: post.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
                                                 }}
                                             />
-                                            <Text>{post.description}</Text>
                                         </View>
-                                    </Card.Content>
+
+                                        <Text>{post.description}</Text>
+                                    </View>
+
+                                    <Icon
+                                        name='paw'
+                                        size={35}
+                                        color='#D11A2A'
+                                        onPress={() => handleUnlike(post._id)}
+                                        style={styles.likeStyle}
+                                    />
+
                                 </Card.Content>
+                            </Card.Content>
 
-                                < FontAwesome
-                                    name='heart'
-                                    size={24}
-                                    color='#D2B48C'
-                                    onPress={() => handleUnlike(post._id)}
-                                />
 
-                            </View>
                         </Card>
-                    )
-                }
-            </ScrollView >
-        </View>
+                    )}
+                </ScrollView >
+            </View>
     )
 }
 
 const { width } = Dimensions.get("screen");
 
 const styles = StyleSheet.create({
+    containerEmpty: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        backgroundColor: '#FFFFFF'
+    },
+    flexRowView: {
+        flexDirection: 'row',
+    },
+    boldTextStyle: {
+        fontWeight: 'bold',
+        marginRight: 5
+    },
+    likeStyle: {
+        position: 'absolute',
+        top: 15,
+        right: 0
+    },
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF'
+    },
+    icon: {
+        backgroundColor: 'transparent',
+        color: 'rgba(0,0,0,0.3)',
+        fontSize: 35.
     },
     cartStyle: {
         shadowOffset: { width: 10, height: 10 },

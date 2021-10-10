@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import {
   View,
@@ -9,8 +9,7 @@ import {
   Alert,
   Modal,
   ScrollView,
-  Dimensions,
-  TouchableOpacity
+  Dimensions
 } from 'react-native';
 
 import {
@@ -19,7 +18,7 @@ import {
   Paragraph
 } from 'react-native-paper';
 
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { useFocusEffect } from '@react-navigation/native';
 
 import moment from 'moment';
 import API from '../../API';
@@ -92,6 +91,12 @@ export default function InfoPostScreen(props) {
       });
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -99,17 +104,6 @@ export default function InfoPostScreen(props) {
   return (
     <View style={styles.container}>
       <ScrollView>
-
-        <TouchableOpacity
-          style={styles.editIcon}
-          onPress={() => props.navigation.navigate('editpost', { _Post })}
-        >
-          <FontAwesome
-            name='edit'
-            color='#D2B48C'
-            size={34}
-          />
-        </TouchableOpacity>
 
         <Card.Content>
           <Title>{state.animal} &nbsp; {state.kind}</Title>
@@ -123,37 +117,70 @@ export default function InfoPostScreen(props) {
 
         <Card.Content>
           <View>
-            <Text>Animal: {state.animal}</Text>
-            <Text>Kind: {state.kind}</Text>
-            <Text>Name : {state.name}</Text>
-            <Text>Gender : {state.gender}</Text>
-            <Text>Age : {state.age}</Text>
-            <Text>Color : </Text>
-            <View
-              style={{
-                backgroundColor: state.color,
-                height: 15,
-                width: 30,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
-              }}
-            />
-            <Text>{state.description}</Text>
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Kind of animal: </Text>
+              <Text>{state.animal}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Breed of animal: </Text>
+              <Text>{state.kind}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Name : </Text>
+              <Text>{state.name}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Gender : </Text>
+              <Text>{state.gender}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Age : </Text>
+              <Text>{state.age}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Color : </Text>
+              <View
+                style={{
+                  backgroundColor: state.color,
+                  height: 15,
+                  width: 30,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
+                }}
+              />
+            </View>
+            <View style={styles.flexRowView}>
+              <Text>{state.description}</Text>
+            </View>
           </View>
         </Card.Content>
 
         <View style={styles.container}>
+
+          <View style={[{ width: "60%", margin: 10 }]}>
+            <Button
+              title='Edit'
+              color='#D2B48C'
+              onPress={() => props.navigation.navigate('editpost', { _Post })}
+            />
+          </View>
+
           <View style={[{ width: "60%", margin: 10 }]}>
             {state.available ?
               <Button
-                title="Deactivate"
-                color='#D2B48C'
+                title='Deactivate'
+                color='#D11A2A'
                 onPress={() => handleAvailability(false)}
               />
               :
               <Button
-                title="Activate"
+                title='Activate'
                 color='#D2B48C'
                 onPress={() => handleAvailability(true)}
               />
@@ -163,7 +190,7 @@ export default function InfoPostScreen(props) {
           <View style={[{ width: "60%", margin: 10 }]}>
             <Button
               title='Delete'
-              color='#D2B48C'
+              color='#D11A2A'
               onPress={() => setState({ confirmDelete: true })}
             />
           </View>
@@ -174,8 +201,7 @@ export default function InfoPostScreen(props) {
           transparent={true}
           visible={state.confirmDelete}
           onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
-            setState({ confirmDelete: !state.confirmDelete });
+            setState({ confirmDelete: false });
           }}
         >
           <View style={styles.centeredView}>
@@ -185,7 +211,7 @@ export default function InfoPostScreen(props) {
               <View style={[{ width: width / 2, margin: 5 }]}>
                 <Button
                   title='Delete'
-                  color='#FF0000'
+                  color='#D11A2A'
                   onPress={handleDelete}
                 />
               </View>
@@ -246,4 +272,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5
   },
+  flexRowView: {
+    flexDirection: 'row',
+    marginTop: 10
+  },
+  boldTextStyle: {
+    fontWeight: 'bold',
+    marginRight: 5
+  }
 });

@@ -135,7 +135,7 @@ export default function ChangeUsernameScreen({ navigation }) {
                         >
                             <Feather
                                 name='check-circle'
-                                color={state.usernameExist ? '#FF0000' : '#D2B48C'}
+                                color={state.usernameExist ? '#D11A2A' : '#D2B48C'}
                                 size={20}
                             />
                         </Animatable.View>
@@ -197,7 +197,13 @@ export default function ChangeUsernameScreen({ navigation }) {
                 }
             </View>
 
-            <Button title="Update Username" onPress={handleUpdate} />
+            <View style={styles.styleButton}>
+                <Button
+                    title="Update Username"
+                    color='#D2B48C'
+                    onPress={handleUpdate}
+                />
+            </View>
         </View>
     )
 }
@@ -205,7 +211,8 @@ export default function ChangeUsernameScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF'
+        backgroundColor: '#FFFFFF',
+        padding: 15
     },
     text_header: {
         color: '#fff',
@@ -234,27 +241,10 @@ const styles = StyleSheet.create({
         marginTop: 50
     },
     errorMsg: {
-        color: '#FF0000',
+        color: '#D11A2A',
         fontSize: 14,
     },
-    signIn: {
-        width: '100%',
-        height: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        backgroundColor: '#D2B48C'
-    },
-    textSign: {
-        fontSize: 18,
-        fontWeight: 'bold'
-    },
-    textPrivate: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 20
-    },
-    color_textPrivate: {
-        color: 'grey'
+    styleButton: {
+        padding: 30
     }
 });

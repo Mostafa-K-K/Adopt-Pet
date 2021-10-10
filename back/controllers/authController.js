@@ -10,10 +10,11 @@ class AuthController {
         if (_id && token) {
             let decoded = jwt.verify(token, "randomString", { ignoreExpiration: true });
             if (_id == decoded._id) {
-                User.find({ _id, token }, (err, result) => {
-                    if (err) return next(err);
-                    res.json({ success: true, result: result[0] });
-                });
+                User
+                    .find({ _id, token }, (err, result) => {
+                        if (err) return next(err);
+                        res.json({ success: true, result: result[0] });
+                    });
             } else {
                 res.json({ success: false });
             }
@@ -35,48 +36,52 @@ class AuthController {
             let role_id = response.role_id;
             let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
 
-            User.updateOne({ _id }, {
-                $set: { token }
-            }, (err, result) => {
-                if (err) return next(err);
-                res.json({ success: true, result: { _id, token, role_id } });
-            });
+            User
+                .updateOne({ _id }, {
+                    $set: { token }
+                }, (err, result) => {
+                    if (err) return next(err);
+                    res.json({ success: true, result: { _id, token, role_id } });
+                });
         });
     }
 
     async signIn(req, res, next) {
         let { username, password } = req.body;
-        User.find({ username }, async (err, response) => {
-            if (err) return next(err);
-            if (response.length) {
-                let isMatch = await bcrypt.compare(password, response[0].password);
-                if (isMatch) {
-                    let _id = response[0]._id;
-                    let role_id = response[0].role_id;
-                    let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
-                    User.updateOne({ _id }, {
-                        $set: { token }
-                    }, (err, result) => {
-                        if (err) return next(err);
-                        res.json({ success: true, result: { _id, token, role_id } });
-                    });
+        User
+            .find({ username }, async (err, response) => {
+                if (err) return next(err);
+                if (response.length) {
+                    let isMatch = await bcrypt.compare(password, response[0].password);
+                    if (isMatch) {
+                        let _id = response[0]._id;
+                        let role_id = response[0].role_id;
+                        let token = jwt.sign({ _id }, "randomString", { expiresIn: 10000 });
+                        User
+                            .updateOne({ _id }, {
+                                $set: { token }
+                            }, (err, result) => {
+                                if (err) return next(err);
+                                res.json({ success: true, result: { _id, token, role_id } });
+                            });
+                    } else {
+                        res.json({ success: false });
+                    }
                 } else {
-                    res.json({ success: false })
+                    res.json({ success: false });
                 }
-            } else {
-                res.json({ success: false })
-            }
-        });
+            });
     }
 
     async signOut(req, res, next) {
         let { token } = req.body;
-        User.updateOne({ token }, {
-            $set: { token: null }
-        }, (err, result) => {
-            if (err) return next(err);
-            res.json({ success: true, result });
-        });
+        User
+            .updateOne({ token }, {
+                $set: { token: null }
+            }, (err, result) => {
+                if (err) return next(err);
+                res.json({ success: true, result });
+            });
     }
 }
 

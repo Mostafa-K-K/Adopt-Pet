@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 
 import {
-  createMaterialBottomTabNavigator
-} from '@react-navigation/material-bottom-tabs';
-
-import {
   createStackNavigator
 } from '@react-navigation/stack';
+
+import {
+  createMaterialBottomTabNavigator
+} from '@react-navigation/material-bottom-tabs';
 
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -25,7 +25,6 @@ import ProfileScreen from './ScreensMain/ProfileScreen';
 
 import RequestsSenderScreen from './ScreensMain/RequestsSenderScreen';
 import RequestsReceiverScreen from './ScreensMain/RequestsReceiverScreen';
-import ContactUserInfo from './ScreensMain/ContactUserInfo';
 
 import LikedPosts from './ScreensMain/LikedPosts';
 import CreatePostScreen from './ScreensMain/CreatePostScreen';
@@ -67,7 +66,7 @@ function HomeStackScreen({ navigation }) {
             <View style={{ flexDirection: 'row' }}>
 
               <Icon
-                name='ios-heart'
+                name='paw'
                 size={25}
                 style={styles.iconButton}
                 onPress={() => navigation.navigate('likedposts')}
@@ -97,7 +96,7 @@ function HomeStackScreen({ navigation }) {
           title: 'Liked Posts',
           headerRight: () => (
             <Icon
-              name='ios-heart'
+              name='paw'
               size={25}
               style={styles.iconButton}
             />
@@ -177,9 +176,9 @@ function SearchStackScreen() {
   )
 }
 
-function RequestsStackScreen({ navigation }) {
+function RequestsStackScreen() {
 
-  const [isSent, setIsSent] = useState(false);
+  const [isSent, setIsSent] = useState(true);
 
   return (
     <Stack.Navigator
@@ -222,15 +221,6 @@ function RequestsStackScreen({ navigation }) {
           )
         }}
       />
-
-      <Stack.Screen
-        name='contactuserinfo'
-        component={ContactUserInfo}
-        options={{ title: "Contact Info" }}
-      />
-
-
-
     </Stack.Navigator>
   )
 }
@@ -264,12 +254,13 @@ function ProfileStackScreen() {
         component={ProfileScreen}
         options={{
           headerRight: () => (
-            <Icon
-              name='ios-log-out-outline'
-              size={25}
-              style={styles.iconButton}
-              onPress={handleLogout}
-            />
+            <TouchableOpacity onPress={handleLogout}>
+              <Icon
+                name='ios-log-out-outline'
+                size={25}
+                style={styles.iconButton}
+              />
+            </TouchableOpacity>
           )
         }}
       />

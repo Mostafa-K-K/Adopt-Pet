@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginTop: 10,
         borderBottomWidth: 1,
-        borderBottomColor: '#FF0000',
+        borderBottomColor: '#D11A2A',
         paddingBottom: 5
     },
     textInput: {
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
         color: '#000000'
     },
     errorMsg: {
-        color: '#FF0000',
+        color: '#D11A2A',
         fontSize: 14,
     },
     button: {

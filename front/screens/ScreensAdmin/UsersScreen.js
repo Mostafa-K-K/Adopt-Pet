@@ -54,21 +54,43 @@ export default function UsersScreen({ navigation }) {
                     >
                         <Card.Content>
                             <View>
-                                <Text>Username : {user.username}</Text>
-                                <Text>Name : {user.firstName} {user.lastName}</Text>
-                                <Text>Phone Number : {user.phone}</Text>
-                                <Text>Address : {user.address}</Text>
-                                <Text>Birth Date : {moment(user.birthDate).format('D   MMMM   YYYY')}</Text>
+                                <View style={styles.flexRowView}>
+                                    <Text style={styles.boldTextStyle}>Username : </Text>
+                                    <Text>{user.username}</Text>
+                                </View>
+
+                                <View style={styles.flexRowView}>
+                                    <Text style={styles.boldTextStyle}>Name : </Text>
+                                    <Text>{user.firstName} {user.lastName}</Text>
+                                </View>
+
+                                <View style={styles.flexRowView}>
+                                    <Text style={styles.boldTextStyle}>Phone Number : </Text>
+                                    <Text>{user.phone}</Text>
+                                </View>
+
+                                <View style={styles.flexRowView}>
+                                    <Text style={styles.boldTextStyle}>Address : </Text>
+                                    <Text>{user.address}</Text>
+                                </View>
+
+                                <View style={styles.flexRowView}>
+                                    <Text style={styles.boldTextStyle}>Birth Date : </Text>
+                                    <Text>{moment(user.birthDate).format('D   MMMM   YYYY')}</Text>
+                                </View>
                             </View>
                         </Card.Content>
 
-                        <Button
-                            title="View"
-                            onPress={() => navigation.navigate('userinfoprofile', { _User: user._id })}
-                        />
+                        <View style={styles.styleButton}>
+                            <Button
+                                title="View"
+                                color='#D2B48C'
+                                onPress={() => navigation.navigate('userinfoprofile', { _User: user._id })}
+                            />
+                        </View>
+
                     </Card>
-                )
-                }
+                )}
             </ScrollView >
         </View >
     )
@@ -95,4 +117,14 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginBottom: 15
     },
+    styleButton: {
+        padding: 30
+    },
+    flexRowView: {
+        flexDirection: 'row',
+    },
+    boldTextStyle: {
+        fontWeight: 'bold',
+        marginRight: 5
+    }
 });

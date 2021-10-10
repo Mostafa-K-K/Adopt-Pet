@@ -4,6 +4,7 @@ import {
     View,
     Text,
     Image,
+    Button,
     TouchableOpacity,
     TextInput,
     Platform,
@@ -37,8 +38,7 @@ export default function CreatePostScreen({ navigation }) {
         description: '',
 
         showColor: false,
-
-        validPost: true,
+        validPost: true
     });
 
     const [colors] = useState([
@@ -142,17 +142,18 @@ export default function CreatePostScreen({ navigation }) {
             API.post(`blogs`, reqBody)
                 .then(res => {
                     const success = res.data.success;
-                    if (success) navigation.navigate('home');
+                    if (success) navigation.goBack();
                 });
         } else (setState({ validPost: false }))
     }
 
     return (
-        <View style={styles.container}>
-            <Animatable.View
-                animation='fadeInUpBig'
-            >
-                <ScrollView>
+        <ScrollView>
+            <View style={styles.container}>
+                <Animatable.View
+                    useNativeDriver={true}
+                    animation='fadeInUpBig'
+                >
                     <View style={styles.subContainer}>
                         <View style={styles.actionImage}>
                             {state.photo == '' ?
@@ -261,7 +262,7 @@ export default function CreatePostScreen({ navigation }) {
                                 style={styles.iconWidth}
                             />
                             <TextInput
-                                placeholder='Animal'
+                                placeholder='Kind of animal'
                                 value={state.animal}
                                 onChangeText={(val) => setState({ animal: val })}
                                 style={styles.textInput}
@@ -276,7 +277,7 @@ export default function CreatePostScreen({ navigation }) {
                                 style={styles.iconWidth}
                             />
                             <TextInput
-                                placeholder='Kind'
+                                placeholder='Breed'
                                 value={state.kind}
                                 onChangeText={(val) => setState({ kind: val })}
                                 style={styles.textInput}
@@ -350,20 +351,20 @@ export default function CreatePostScreen({ navigation }) {
                             </Animatable.View>
                         }
 
-                        <View style={styles.button}>
-                            <TouchableOpacity
-                                style={styles.signIn}
+                        <View style={styles.styleButton}>
+                            <Button
+                                title='Create'
+                                color='#D2B48C'
                                 onPress={handleSubmit}
-                            >
-                                <Text style={[styles.textSign, {
-                                    color: '#fff'
-                                }]}>Create</Text>
-                            </TouchableOpacity>
+                            />
                         </View>
+
                     </View>
-                </ScrollView>
-            </Animatable.View >
-        </View >
+
+                </Animatable.View >
+
+            </View >
+        </ScrollView>
     )
 }
 
@@ -372,50 +373,24 @@ const { width } = Dimensions.get("screen");
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
         backgroundColor: '#FFFFFF',
     },
     subContainer: {
-        paddingLeft: 20,
-        paddingRight: 20,
-        paddingBottom: 20,
-    },
-    header: {
-        flex: 1,
-        justifyContent: 'flex-end',
         paddingHorizontal: 20,
-        paddingBottom: 50
-    },
-    footer: {
-        flex: Platform.OS === 'ios' ? 3 : 5,
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        paddingHorizontal: 20,
-        paddingVertical: 30
-    },
-    text_header: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 30
-    },
-    text_footer: {
-        color: '#000000',
-        fontSize: 18
+        paddingVertical: 5
     },
     action: {
         flexDirection: 'row',
         marginTop: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#f2f2f2',
-        paddingBottom: 5,
-        width: width
+        paddingBottom: 5
     },
     actionImage: {
         flexDirection: 'column',
         marginTop: 10,
         paddingBottom: 5,
+        alignItems: 'center'
     },
     actionImageIcon: {
         width: 200,
@@ -425,7 +400,7 @@ const styles = StyleSheet.create({
         paddingBottom: 5,
     },
     textInput: {
-        flex: 1,
+        width: '80%',
         marginTop: Platform.OS === 'ios' ? 0 : -5,
         color: '#000000'
     },
@@ -434,7 +409,7 @@ const styles = StyleSheet.create({
         marginTop: 50
     },
     errorMsg: {
-        color: '#FF0000',
+        color: '#D11A2A',
         fontSize: 14,
     },
     signIn: {
@@ -464,5 +439,8 @@ const styles = StyleSheet.create({
     },
     iconWidth: {
         width: 40
+    },
+    styleButton: {
+        padding: 30
     }
 });

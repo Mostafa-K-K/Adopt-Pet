@@ -4,6 +4,7 @@ import {
   View,
   Text,
   Image,
+  Button,
   TouchableOpacity,
   TextInput,
   Platform,
@@ -39,7 +40,8 @@ export default function InfoPostScreen(props) {
     color: '',
     description: '',
 
-    showColor: false
+    showColor: false,
+    validPost: true
   });
 
   const [colors] = useState([
@@ -103,37 +105,47 @@ export default function InfoPostScreen(props) {
     }
   };
 
-  function handleSubmit() {
-
-    let reqBody = new FormData();
-    reqBody.append('name', state.name.trim());
-    reqBody.append('animal', state.animal.trim());
-    reqBody.append('kind', state.kind.trim());
-    reqBody.append('gender', state.gender);
-    reqBody.append('age', state.age);
-    reqBody.append('color', state.color);
-    reqBody.append('description', state.description);
-    reqBody.append('date', new Date());
-    reqBody.append('_User', _id);
-
-    if (state.photo != '') {
-      let uri = state.photo.uri;
-      let name = uri.split('/').pop();
-      let match = /\.(\w+)$/.exec(name);
-      let type = match ? `image/${match[1]}` : `image`;
-
-      reqBody.append('fileSrc', { uri, name, type });
+  function handleUpdate() {
+    let data = {
+      name: state.name.trim(),
+      animal: state.animal.trim(),
+      kind: state.kind.trim(),
+      photo: state.photo,
+      age: state.age.trim(),
+      description: state.description.trim(),
+      gender: state.gender,
+      color: state.color
     }
 
-    API.post(`blogs`, reqBody)
-      .then(res => {
-        const success = res.data.success;
-        if (success) navigation.goBack();
-      });
-  }
+    if (data.name != '' &&
+      data.animal != '' &&
+      data.kind != '' &&
+      data.age != '' &&
+      data.description != '') {
 
-  function handleUpdate() {
+      let reqBody = new FormData();
+      reqBody.append('name', data.name);
+      reqBody.append('animal', data.animal);
+      reqBody.append('kind', data.kind);
+      reqBody.append('gender', data.gender);
+      reqBody.append('age', data.age);
+      reqBody.append('color', data.color);
+      reqBody.append('description', data.description);
 
+      if (state.photo) {
+        let uri = state.photo.uri;
+        let name = uri.split('/').pop();
+        let match = /\.(\w+)$/.exec(name);
+        let type = match ? `image/${match[1]}` : `image`;
+        reqBody.append('fileSrc', { uri, name, type });
+      }
+
+      API.put(`blogs/${_Post}`, reqBody)
+        .then(res => {
+          const success = res.data.success;
+          if (success) props.navigation.goBack();
+        });
+    } else (setState({ validPost: false }))
   }
 
   function fetchData() {
@@ -148,7 +160,7 @@ export default function InfoPostScreen(props) {
             kind: result.kind,
             oldPhoto: result.photo,
             gender: result.gender,
-            age: result.age,
+            age: result.age.toString(),
             color: result.color,
             description: result.description
           });
@@ -166,200 +178,205 @@ export default function InfoPostScreen(props) {
         animation='fadeInUpBig'
       >
         <ScrollView>
-          <View style={styles.actionImage}>
-            {state.photo == '' ?
-              <Image
-                style={{
-                  width: 200,
-                  height: 200,
-                  borderRadius: 30
-                }}
-                source={{ uri: `http://192.168.43.79:8000/uploads/${state.oldPhoto}` }}
-              />
-              :
-              < Image
-                style={{
-                  width: 200,
-                  height: 200,
-                  borderRadius: 30
-                }}
-                source={{
-                  uri: state.photo.uri,
-                }}
-              />
-            }
-
-            <View style={styles.actionImageIcon}>
-              <TouchableOpacity onPress={handleCameraImage}>
-                <FontAwesome
-                  name='camera'
-                  color='#D2B48C'
-                  size={24}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleGalleryImage}>
-                <FontAwesome
-                  name='picture-o'
-                  color='#D2B48C'
-                  size={24}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.action}>
-            <FontAwesome
-              name='user'
-              color='#D2B48C'
-              size={24}
-              style={styles.iconWidth}
-            />
-            <TextInput
-              placeholder='Name'
-              value={state.name}
-              onChangeText={(val) => setState({ name: val })}
-              style={styles.textInput}
-            />
-          </View>
-
-          <View style={styles.action}>
-            <FontAwesome
-              name='paint-brush'
-              color='#D2B48C'
-              size={24}
-              style={styles.iconWidth}
-              onPress={() => setState({ showColor: !state.showColor })}
-            />
-
-            {state.showColor ?
-              <NativeColorPicker
-                colors={colors}
-                selectedColor={state.color}
-                itemSize={30}
-                // horizontal={true}
-                animate="scale"
-                shadow
-                markerType="checkmark"
-                markerDisplay="color"
-                onSelect={val => setState({ color: val, showColor: false })}
-              />
-              :
-              <TouchableOpacity onPress={() => setState({ showColor: !state.showColor })}>
-                <View
+          <View style={styles.subContainer}>
+            <View style={styles.actionImage}>
+              {state.photo == '' ?
+                <Image
                   style={{
-                    width: 100,
-                    borderRadius: 10,
-                    height: 20,
-                    backgroundColor: state.color,
-                    borderWidth: 1,
-                    borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
+                    width: 200,
+                    height: 200,
+                    borderRadius: 30
+                  }}
+                  source={{ uri: `http://192.168.43.79:8000/uploads/${state.oldPhoto}` }}
+                />
+                :
+                < Image
+                  style={{
+                    width: 200,
+                    height: 200,
+                    borderRadius: 30
+                  }}
+                  source={{
+                    uri: state.photo.uri,
                   }}
                 />
-              </TouchableOpacity>
-            }
-          </View>
+              }
 
-          <View style={styles.action}>
-            <FontAwesome
-              name='gg-circle'
-              color='#D2B48C'
-              size={24}
-              style={styles.iconWidth}
-            />
-            <TextInput
-              placeholder='Animal'
-              value={state.animal}
-              onChangeText={(val) => setState({ animal: val })}
-              style={styles.textInput}
-            />
-          </View>
+              <View style={styles.actionImageIcon}>
+                <TouchableOpacity onPress={handleCameraImage}>
+                  <FontAwesome
+                    name='camera'
+                    color='#D2B48C'
+                    size={24}
+                  />
+                </TouchableOpacity>
 
-          <View style={styles.action}>
-            <FontAwesome
-              name='paw'
-              color='#D2B48C'
-              size={24}
-              style={styles.iconWidth}
-            />
-            <TextInput
-              placeholder='Kind'
-              value={state.kind}
-              onChangeText={(val) => setState({ kind: val })}
-              style={styles.textInput}
-            />
-          </View>
-
-          <View style={styles.action}>
-            <FontAwesome
-              name='child'
-              color='#D2B48C'
-              size={24}
-              style={styles.iconWidth}
-            />
-            <TextInput
-              keyboardType='numeric'
-              placeholder='Age'
-              value={state.age}
-              onChangeText={(val) => setState({ age: val })}
-              style={styles.textInput}
-            />
-          </View>
-
-          <View style={styles.action}>
-            <FontAwesome
-              name='venus-mars'
-              color='#D2B48C'
-              size={24}
-              style={styles.iconWidth}
-            />
-            <RadioButton.Group
-              value={state.gender}
-              onValueChange={val => setState({ gender: val })}
-            >
-              <View style={{ flexDirection: 'row', marginTop: -15 }}>
-                <RadioButton.Item
-                  label='Male'
-                  value='Male'
-                  position='leading'
-                  color='#D2B48C'
-                  uncheckedColor='#D2B48C'
-                />
-                <RadioButton.Item
-                  label='Female'
-                  value='Female'
-                  position='leading'
-                  color='#D2B48C'
-                  uncheckedColor='#D2B48C'
-                />
+                <TouchableOpacity onPress={handleGalleryImage}>
+                  <FontAwesome
+                    name='picture-o'
+                    color='#D2B48C'
+                    size={24}
+                  />
+                </TouchableOpacity>
               </View>
-            </RadioButton.Group>
-          </View>
+            </View>
 
-          <View style={styles.action}>
-            <FontAwesome
-              name='pencil-square-o'
-              color='#D2B48C'
-              size={24}
-              style={styles.iconWidth}
-            />
-            <TextInput
-              placeholder='Description'
-              value={state.description}
-              onChangeText={(val) => setState({ description: val })}
-              style={styles.textInput}
-            />
-          </View>
+            <View style={styles.action}>
+              <FontAwesome
+                name='user'
+                color='#D2B48C'
+                size={24}
+                style={styles.iconWidth}
+              />
+              <TextInput
+                placeholder='Name'
+                value={state.name}
+                onChangeText={(val) => setState({ name: val })}
+                style={styles.textInput}
+              />
+            </View>
 
-          <View style={styles.button}>
-            <TouchableOpacity
-              style={styles.signIn}
-              onPress={handleUpdate}
-            >
-              <Text style={[styles.textSign, {
-                color: '#fff'
-              }]}>Update</Text>
-            </TouchableOpacity>
+            <View style={styles.action}>
+              <FontAwesome
+                name='paint-brush'
+                color='#D2B48C'
+                size={24}
+                style={styles.iconWidth}
+                onPress={() => setState({ showColor: !state.showColor })}
+              />
+
+              {state.showColor ?
+                <NativeColorPicker
+                  colors={colors}
+                  selectedColor={state.color}
+                  itemSize={30}
+                  // horizontal={true}
+                  animate="scale"
+                  shadow
+                  markerType="checkmark"
+                  markerDisplay="color"
+                  onSelect={val => setState({ color: val, showColor: false })}
+                />
+                :
+                <TouchableOpacity onPress={() => setState({ showColor: !state.showColor })}>
+                  <View
+                    style={{
+                      width: 100,
+                      borderRadius: 10,
+                      height: 20,
+                      backgroundColor: state.color,
+                      borderWidth: 1,
+                      borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
+                    }}
+                  />
+                </TouchableOpacity>
+              }
+            </View>
+
+            <View style={styles.action}>
+              <FontAwesome
+                name='gg-circle'
+                color='#D2B48C'
+                size={24}
+                style={styles.iconWidth}
+              />
+              <TextInput
+                placeholder='Animal'
+                value={state.animal}
+                onChangeText={(val) => setState({ animal: val })}
+                style={styles.textInput}
+              />
+            </View>
+
+            <View style={styles.action}>
+              <FontAwesome
+                name='paw'
+                color='#D2B48C'
+                size={24}
+                style={styles.iconWidth}
+              />
+              <TextInput
+                placeholder='Kind'
+                value={state.kind}
+                onChangeText={(val) => setState({ kind: val })}
+                style={styles.textInput}
+              />
+            </View>
+
+            <View style={styles.action}>
+              <FontAwesome
+                name='child'
+                color='#D2B48C'
+                size={24}
+                style={styles.iconWidth}
+              />
+              <TextInput
+                keyboardType='numeric'
+                placeholder='Age'
+                value={state.age}
+                onChangeText={(val) => setState({ age: val })}
+                style={styles.textInput}
+              />
+            </View>
+
+            <View style={styles.action}>
+              <FontAwesome
+                name='venus-mars'
+                color='#D2B48C'
+                size={24}
+                style={styles.iconWidth}
+              />
+              <RadioButton.Group
+                value={state.gender}
+                onValueChange={val => setState({ gender: val })}
+              >
+                <View style={{ flexDirection: 'row', marginTop: -15 }}>
+                  <RadioButton.Item
+                    label='Male'
+                    value='Male'
+                    position='leading'
+                    color='#D2B48C'
+                    uncheckedColor='#D2B48C'
+                  />
+                  <RadioButton.Item
+                    label='Female'
+                    value='Female'
+                    position='leading'
+                    color='#D2B48C'
+                    uncheckedColor='#D2B48C'
+                  />
+                </View>
+              </RadioButton.Group>
+            </View>
+
+            <View style={styles.action}>
+              <FontAwesome
+                name='pencil-square-o'
+                color='#D2B48C'
+                size={24}
+                style={styles.iconWidth}
+              />
+              <TextInput
+                placeholder='Description'
+                value={state.description}
+                onChangeText={(val) => setState({ description: val })}
+                style={styles.textInput}
+              />
+            </View>
+
+            {state.validPost ? null :
+              < Animatable.View animation='fadeInLeft' duration={500} useNativeDriver={true}>
+                <Text style={styles.errorMsg}>Please Fill in all Required Fields.</Text>
+              </Animatable.View>
+            }
+
+            <View style={styles.styleButton}>
+              <Button
+                title='Update'
+                color='#D2B48C'
+                onPress={handleUpdate}
+              />
+            </View>
           </View>
 
         </ScrollView>
@@ -368,54 +385,29 @@ export default function InfoPostScreen(props) {
   )
 }
 
-
 const { width } = Dimensions.get("screen");
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingBottom: 20,
   },
-  header: {
-    flex: 1,
-    justifyContent: 'flex-end',
+  subContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 50
-  },
-  footer: {
-    flex: Platform.OS === 'ios' ? 3 : 5,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingHorizontal: 20,
-    paddingVertical: 30
-  },
-  text_header: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 30
-  },
-  text_footer: {
-    color: '#000000',
-    fontSize: 18
+    paddingVertical: 5
   },
   action: {
     flexDirection: 'row',
     marginTop: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f2f2f2',
-    paddingBottom: 5,
-    width: width
+    paddingBottom: 5
   },
   actionImage: {
     flexDirection: 'column',
     marginTop: 10,
     paddingBottom: 5,
+    alignItems: 'center'
   },
   actionImageIcon: {
     width: 200,
@@ -425,9 +417,8 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   textInput: {
-    flex: 1,
+    width: '80%',
     marginTop: Platform.OS === 'ios' ? 0 : -5,
-    paddingLeft: 0,
     color: '#000000'
   },
   button: {
@@ -435,7 +426,7 @@ const styles = StyleSheet.create({
     marginTop: 50
   },
   errorMsg: {
-    color: '#FF0000',
+    color: '#D11A2A',
     fontSize: 14,
   },
   signIn: {
@@ -465,5 +456,8 @@ const styles = StyleSheet.create({
   },
   iconWidth: {
     width: 40
+  },
+  styleButton: {
+    padding: 30
   }
 });

@@ -18,14 +18,15 @@ const multerStorage = multer.diskStorage({
 const upload = multer({ storage: multerStorage })
 
 router.post('/blogs', upload.single('fileSrc'), blogsController.post);
+router.put('/blogs/:id', upload.single('fileSrc'), blogsController.put);
 
 router.get('/blogsuser/:_User', blogsController.getByUser);
-
 router.post('/blogsfilter', blogsController.getFiltration);
+
+router.get('/blogsAll', blogsController.getAll);
 
 router.get('/blogs', blogsController.getAll);
 router.get('/blogs/:id', blogsController.get);
-router.put('/blogs/:id', blogsController.put);
 router.delete('/blogs/:id', blogsController.delete);
 
 module.exports = router;

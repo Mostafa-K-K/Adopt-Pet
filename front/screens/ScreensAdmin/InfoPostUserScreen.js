@@ -53,8 +53,8 @@ export default function InfoPostUserScreen(props) {
       .then(res => {
         const success = res.data.success;
         if (success) {
-          setState({ confirmDelete: false })
-          props.navigation.goBack()
+          setState({ confirmDelete: false });
+          props.navigation.goBack();8
         };
       })
   }
@@ -74,7 +74,7 @@ export default function InfoPostUserScreen(props) {
             age: result.age,
             color: result.color,
             description: result.description,
-            available: result.available,
+            available: result.available ? 'Activate' : 'Deactivate',
             date: result.date
           });
         }
@@ -91,7 +91,7 @@ export default function InfoPostUserScreen(props) {
 
         <Card.Content>
           <Title>{state.animal} &nbsp; {state.kind}</Title>
-          <Paragraph>Published on {moment(state.date).fromNow()}</Paragraph>
+          <Paragraph>Published on {moment(new Date(state.date)).fromNow()}</Paragraph>
         </Card.Content>
 
         <Image
@@ -101,23 +101,51 @@ export default function InfoPostUserScreen(props) {
 
         <Card.Content>
           <View>
-            <Text>Animal: {state.animal}</Text>
-            <Text>Kind: {state.kind}</Text>
-            <Text>Available: {state.available}</Text>
-            <Text>Name : {state.name}</Text>
-            <Text>Gender : {state.gender}</Text>
-            <Text>Age : {state.age}</Text>
-            <Text>Color : </Text>
-            <View
-              style={{
-                backgroundColor: state.color,
-                height: 15,
-                width: 30,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
-              }}
-            />
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Kind of animal : </Text>
+              <Text>{state.animal}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Breed of animal : </Text>
+              <Text>{state.kind}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Status : </Text>
+              <Text>{state.available}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Name : </Text>
+              <Text>{state.name}</Text>
+            </View>
+
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Gender : </Text>
+              <Text>{state.gender}</Text>
+            </View>
+
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Age : </Text>
+              <Text>{state.age}</Text>
+            </View>
+
+            <View style={styles.flexRowView}>
+              <Text style={styles.boldTextStyle}>Color : </Text>
+              <View
+                style={{
+                  backgroundColor: state.color,
+                  height: 15,
+                  width: 30,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: state.color == '#FFFFFF' ? '#D2B48C' : 'transparent'
+                }}
+              />
+            </View>
             <Text>{state.description}</Text>
           </View>
         </Card.Content>
@@ -126,7 +154,7 @@ export default function InfoPostUserScreen(props) {
           <View style={[{ width: "60%", margin: 10 }]}>
             <Button
               title='Delete'
-              color='#D2B48C'
+              color='#D11A2A'
               onPress={() => setState({ confirmDelete: true })}
             />
           </View>
@@ -137,8 +165,7 @@ export default function InfoPostUserScreen(props) {
           transparent={true}
           visible={state.confirmDelete}
           onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
-            setState({ confirmDelete: !state.confirmDelete });
+            setState({ confirmDelete: false });
           }}
         >
           <View style={styles.centeredView}>
@@ -148,7 +175,7 @@ export default function InfoPostUserScreen(props) {
               <View style={[{ width: width / 2, margin: 5 }]}>
                 <Button
                   title='Delete'
-                  color='#FF0000'
+                  color='#D11A2A'
                   onPress={handleDelete}
                 />
               </View>
@@ -204,4 +231,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5
   },
+  flexRowView: {
+    flexDirection: 'row',
+  },
+  boldTextStyle: {
+    fontWeight: 'bold',
+    marginRight: 5
+  }
 });

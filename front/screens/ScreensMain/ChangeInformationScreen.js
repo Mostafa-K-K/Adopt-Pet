@@ -128,6 +128,7 @@ export default function ChangeInformationScreen({ navigation }) {
               color='#D2B48C'
               size={20}
             />
+
             <TextInput
               placeholder='First Name'
               style={styles.textInput}
@@ -284,10 +285,13 @@ export default function ChangeInformationScreen({ navigation }) {
           </View>
         </View>
 
-        <Button
-          title='Update'
-          onPress={handleUpdate}
-        />
+        <View style={styles.styleButton}>
+          <Button
+            title='Update'
+            color='#D2B48C'
+            onPress={handleUpdate}
+          />
+        </View>
 
       </ScrollView>
     </View>
@@ -297,7 +301,8 @@ export default function ChangeInformationScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF'
+    backgroundColor: '#FFFFFF',
+    padding: 15
   },
   text_header: {
     color: '#fff',
@@ -326,27 +331,10 @@ const styles = StyleSheet.create({
     marginTop: 50
   },
   errorMsg: {
-    color: '#FF0000',
+    color: '#D11A2A',
     fontSize: 14,
   },
-  signIn: {
-    width: '100%',
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: '#D2B48C'
-  },
-  textSign: {
-    fontSize: 18,
-    fontWeight: 'bold'
-  },
-  textPrivate: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 20
-  },
-  color_textPrivate: {
-    color: 'grey'
+  styleButton: {
+    padding: 30
   }
 });

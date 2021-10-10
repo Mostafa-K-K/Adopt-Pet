@@ -11,6 +11,8 @@ import {
   TouchableOpacity
 } from 'react-native';
 
+import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 
 import moment from 'moment';
@@ -83,32 +85,78 @@ export default function ProfileScreen({ navigation }) {
     <View style={styles.container}>
 
       <ScrollView>
-        <View>
-          <Text>Username : {state.username}</Text>
-          <Text>Name : {state.firstName} {state.lastName}</Text>
-          <Text>Phone Number : {state.phone}</Text>
-          <Text>Address : {state.address}</Text>
-          <Text>Birth Date : {moment(state.birthDate).format('D   MMMM   YYYY')}</Text>
+        <View style={styles.styleTextProfile}>
+
+          <View style={styles.flexRowView}>
+            <Text style={styles.boldTextStyle}>Username : </Text>
+            <Text>{state.username}</Text>
+          </View>
+
+          <View style={styles.flexRowView}>
+            <Text style={styles.boldTextStyle}>Name : </Text>
+            <Text>{state.firstName} {state.lastName}</Text>
+          </View>
+
+          <View style={styles.flexRowView}>
+            <Text style={styles.boldTextStyle}>Phone Number : </Text>
+            <Text>{state.phone}</Text>
+          </View>
+
+          <View style={styles.flexRowView}>
+            <Text style={styles.boldTextStyle}>Address : </Text>
+            <Text>{state.address}</Text>
+          </View>
+
+          <View style={styles.flexRowView}>
+            <Text style={styles.boldTextStyle}>Birth Date : </Text>
+            <Text>{moment(state.birthDate).format('D   MMMM   YYYY')}</Text>
+          </View>
           <Button
             title='Edit Profile'
+            color='#D2B48C'
             onPress={() => navigation.navigate('editprofile')}
           />
         </View>
 
         <View style={styles.listBlogs}>
-          {state.posts.map(post =>
+          {!state.posts.length ?
             <TouchableOpacity
-              key={post._id}
-              style={styles.blog}
-              onPress={() => navigation.navigate('infopost', { _Post: post._id })}
+              style={styles.containerEmpty}
+              onPress={() => navigation.navigate('createpost')}
             >
-              <Image
-                style={{ width: width / 3, height: width / 3 }}
-                source={{ uri: `http://192.168.43.79:8000/uploads/${post.photo}` }}
-              />
-
+              <Animatable.View
+                style={styles.containerViewEmpty}
+                animation="pulse"
+                easing="ease-out"
+                iterationCount="infinite"
+              >
+                <Icon
+                  name='image-outline'
+                  size={25}
+                  style={styles.icon}
+                />
+                <Text
+                  style={[styles.icon, { fontSize: 24 }]}
+                >
+                  &nbsp; &nbsp; Add Post
+                </Text>
+              </Animatable.View>
             </TouchableOpacity>
-          )}
+            :
+            state.posts.map(post =>
+              <TouchableOpacity
+                key={post._id}
+                style={styles.blog}
+                onPress={() => navigation.navigate('infopost', { _Post: post._id })}
+              >
+                <Image
+                  style={{ width: width / 3, height: width / 3 }}
+                  source={{ uri: `http://192.168.43.79:8000/uploads/${post.photo}` }}
+                />
+
+              </TouchableOpacity>
+            )
+          }
         </View>
       </ScrollView>
 
@@ -123,11 +171,42 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF'
   },
+  containerEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    marginTop: 60
+  },
+  containerViewEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    marginTop: 60
+  },
+  icon: {
+    backgroundColor: 'transparent',
+    color: 'rgba(0,0,0,0.3)',
+    fontSize: 35.
+  },
   listBlogs: {
     flexDirection: 'row',
     flexWrap: 'wrap'
   },
   blog: {
     width: width / 3,
+  },
+  styleTextProfile: {
+    padding: 10,
+    height: width / 1.8,
+    flexDirection: 'column',
+    justifyContent: 'space-between'
+  },
+  flexRowView: {
+    flexDirection: 'row',
+  },
+  boldTextStyle: {
+    fontWeight: 'bold',
+    marginRight: 5
   }
 });
